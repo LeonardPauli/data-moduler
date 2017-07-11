@@ -1,0 +1,36 @@
+{
+	"folders": [
+		{ "path": "src" },
+		{ "path": "demo" },
+		{
+			"path": "/",
+			"folder_include_patterns": ["test", "build", "config"],
+			"file_exclude_patterns": [".watchmanconfig", "yarn.lock"],
+			"follow_symlinks": true
+		}
+	],
+	"settings": {
+		"tab_size": 2,
+		"default_line_ending": "unix"
+	},
+	"build_systems": [{
+		"name": "List",
+		"shell_cmd": "ls -a"
+	}, {
+		"name": "pwd",
+		"shell_cmd": "pwd"
+	}],
+	"syntax_override": {
+		"\\.js$": ["JSX", "JSX"]
+	},
+	"SublimeLinter": {
+		"chdir": "${project}",
+		"linters": {
+			"eslint": {
+				"args": [
+					"-c", "${project}/.eslintrc.js",
+				]
+			}
+		}
+	}
+}
