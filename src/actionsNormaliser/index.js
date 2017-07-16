@@ -1,4 +1,4 @@
-// import modulers from '../modulers'
+// import plugins from '../plugins'
 import {fieldNormaliser} from '../fieldsNormaliser'
 import {defaultActions, defaultGetters} from './defaultActions'
 import constants from '../constants'

@@ -49,6 +49,7 @@ export default {
 	// tip: set rootValue to {req, res} for unified experience
 	// locked down by default
 	// args are Object.assign({}, req.params, req.query, req.body, )
+	authorised: ({user})=> user.priviisdsdfsdf.indexOf(prividfsdf.admin)
 	authorised: async ({action, args, root: {req: {user}, res}, module})=> false
 	authorised: async ({action, args, root: {req: {user}, res}, module})=> ({
 		list: true,

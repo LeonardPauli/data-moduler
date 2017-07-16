@@ -1,4 +1,4 @@
-import modulers from './modulers'
+import plugins from './plugins'
 
 
 // consts
@@ -19,11 +19,18 @@ const defaultDataTypes = {
 
 // dataTypes
 const dataTypes = Object.assign({}, defaultDataTypes)
-modulers.map(({dataTypes: types, namespace})=> Object.keys(types).forEach(k=> {
+plugins.map(({dataTypes: types, namespace})=> Object.keys(types).forEach(k=> {
 	const type = dataTypes[k] = dataTypes[k] || {}
 	const ownType = types[k]
 	if (ownType.type) type[namespace] = ownType.type
 }))
+
+dataTypes.URL = dataTypes.STRING
+dataTypes.ENUM = dataTypes.STRING
+dataTypes.GEOLOCATION = dataTypes.STRING
+dataTypes.JSON = dataTypes.STRING
+
+
 const dataTypesExportable = {}
 Object.keys(dataTypes).forEach(k=> dataTypesExportable[k]= {type: dataTypes[k]})
 
@@ -34,7 +41,7 @@ dataTypes.LIST.of = ({type: rawInnerType})=> ({module})=> {
 		: rawInnerType({module})
 
 	const newType = {}
-	modulers.forEach(({namespace, dataTypes: {LIST: moduleLIST}})=> {
+	plugins.forEach(({namespace, dataTypes: {LIST: moduleLIST}})=> {
 		if (!moduleLIST || !moduleLIST.of) return
 		newType[namespace] = moduleLIST.of({
 			innerType,

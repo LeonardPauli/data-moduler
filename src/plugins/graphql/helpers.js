@@ -17,6 +17,8 @@ export const getGraphqlQuery = modules=> {
 			entity.fields = {}
 			Object.assign(entity.fields, module.graphql[isActions?'actions':'getters'])
 			
+			var s = GraphQLObjectType
+			debugger;
 			endpoints[moduleName] = {
 				type: new GraphQLObjectType(entity),
 				resolve: ()=> true,

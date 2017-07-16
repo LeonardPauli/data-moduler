@@ -1,4 +1,4 @@
-import modulers from './modulers'
+import plugins from './plugins'
 import fieldsNormaliser from './fieldsNormaliser'
 import actionsNormaliser from './actionsNormaliser'
 import constants from './constants'
@@ -36,10 +36,10 @@ const moduleParser = module=> {
 	newModule.fields = fieldsNormaliser(newModule)
 
 	// plugins prepare
-	modulers.map(m=> m.prepare).filter(v=> v).forEach(f=> f(newModule))
+	plugins.map(m=> m.prepare).filter(v=> v).forEach(f=> f(newModule))
 
 	// type
-	modulers.forEach(({namespace, typeGenerator: fn})=>
+	plugins.forEach(({namespace, typeGenerator: fn})=>
 		fn && (newModule.type[namespace] = fn(newModule)))
 
 	// actions, getters
@@ -47,9 +47,9 @@ const moduleParser = module=> {
 	// console.dir({newModule}, {colors:1, depth:2})
 	
 	// plugins
-	// modulers.map(m=> m.typeGenerator).filter(v=> v).forEach(f=> f(newModule))
-	modulers.map(m=> m.gettersGenerator).filter(v=> v).forEach(f=> f(newModule))
-	modulers.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(newModule))
+	// plugins.map(m=> m.typeGenerator).filter(v=> v).forEach(f=> f(newModule))
+	plugins.map(m=> m.gettersGenerator).filter(v=> v).forEach(f=> f(newModule))
+	plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(newModule))
 
 
 	return newModule
@@ -65,7 +65,7 @@ const modulesParser = rawModules=> {
 	return modules
 }
 
-const helpers = modulers.map(o=> o.helpers).filter(o=> o)
+const helpers = plugins.map(o=> o.helpers).filter(o=> o)
 	.reduce((p, v)=> Object.assign(p, v), {})
 
 export default {
