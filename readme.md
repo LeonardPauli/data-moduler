@@ -3,8 +3,9 @@
 Automatic generation of database models, rest endpoints and graphql api (all with validations, ease of authentisation and fully customizable) from simple specification \"module\" files
 
 A Node / Express / GraphQL / Sequelize / Postgres project
+(although plugins for other data stores etc could be written relatively easily)
 
-Initially created by Leonard Pauli, July 2017
+Created by Leonard Pauli, July 2017
 
 
 ## Get started
@@ -23,3 +24,24 @@ Initially created by Leonard Pauli, July 2017
 12. Edit the source, look in ie. `src/modules/Test.js`
 13. Restart the server (`ctrl + c` in the terminal, followed by `yarn dev` again), and reload the webpage, to try your changes (database will be erased in between)
 
+
+## Todo
+
+- [x] Basic/primitive types (with comments)
+- [x] Nested modules
+- [x] Basic markdown plugin
+- [ ] Relation type (normaliser + markdown)
+- [ ] Mutations/fetchers (normaliser + markdown + tmpstore
+	(just store in memory store, mostly as base for other stores))
+- [ ] Actions/getters (normaliser + markdown)
+- [ ] Basic GraphQL
+	(schema, graphiql, nested modules, primitive types, comments, actions/getters)
+- [ ] GraphQL relation types
+- [ ] CRUD (markdown + tmpstore + graphql)
+- [ ] express-rest plugin (endpoints)
+- [ ] express-rest support with markdown plugin
+	(shouldn't need to know about each other though... express-rest write to some documentation field on model?)
+- [ ] sequelize plugin
+- [ ] access-control / authorised field
+- [ ] vuex code generation (not in memory construction, write to file for now)
+- [ ] dataloader functionality (ie. don't make unnecessary db queries)
