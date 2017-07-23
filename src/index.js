@@ -1,75 +1,134 @@
-import plugins from './plugins'
-import fieldsNormaliser from './fieldsNormaliser'
-import actionsNormaliser from './actionsNormaliser'
-import constants from './constants'
-const {
-	useId, allowNull,
-	dataTypesExportable,
-} = constants
+// data-moduler
+// Created by Leonard Pauli, July 2017
+// Copyright Leonard Pauli, All rights reserved
 
 
+import _plugins from './plugins'
+export const plugins = _plugins
 
-// metaNormaliser
-const metaNormaliser = module=> {
-	const {name, tabelName, description} = module
-	if (!name || !name.length)
-		throw new Error('moduleParser: module.name is required', module)
+import getDataFlags from './getDataFlags'
+import getDataTypes from './getDataTypes'
 
-	return {
-		name,
-		tabelName: tabelName || name
-			.replace(/^[A-Z]/, l=> l.toLowerCase())
-			.replace(/[A-Z]/g, l=> '_'+l.toLowerCase()),
-		description, // no autogen
-	}
-}
+import getMetaNormaliser from './getMetaNormaliser'
+import getFieldsNormaliser from './getFieldsNormaliser'
+import getActionsNormaliser from './getActionsNormaliser'
 
+const getModuleInitialiser = moduler=> rawModule=> {
+	const {plugins} = moduler
+	const module = Object.assign({}, rawModule)
 
-// moduleParser
-const moduleParser = module=> {
-	
-	// name, tabelName, description
-	const newModule = Object.assign({}, module, metaNormaliser(module))
-	
-	// fields
-	newModule.type = Object.assign({}, newModule.type)
-	newModule.fields = fieldsNormaliser(newModule)
+	// pre
+	module.isEntity = typeof rawModule.isEntity === 'undefined'
+		? !!rawModule.fields
+		: rawModule.isEntity
 
-	// plugins prepare
-	plugins.map(m=> m.prepare).filter(v=> v).forEach(f=> f(newModule))
-
-	// type
-	plugins.forEach(({namespace, typeGenerator: fn})=>
-		fn && (newModule.type[namespace] = fn(newModule)))
-
-	// actions, getters
-	Object.assign(newModule, actionsNormaliser(newModule))
-	// console.dir({newModule}, {colors:1, depth:2})
-	
 	// plugins
-	// plugins.map(m=> m.typeGenerator).filter(v=> v).forEach(f=> f(newModule))
-	plugins.map(m=> m.gettersGenerator).filter(v=> v).forEach(f=> f(newModule))
-	plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(newModule))
+	plugins.map(p=> p.initialiseModule).filter(v=> v).forEach(f=> f(module))
 
-
-	return newModule
-}
-
-
-const modulesParser = rawModules=> {
-	const modules = {}
-	Object.keys(rawModules).forEach(k=> {
-		rawModules[k].name = rawModules[k].name || k
-		modules[k] = moduleParser(rawModules[k])
+	// helpers
+	Object.defineProperty(module, 'toString', {
+		enumerable: false,
+		value: function () { return this.name },
 	})
-	return modules
+
+	return module
 }
 
-const helpers = plugins.map(o=> o.helpers).filter(o=> o)
-	.reduce((p, v)=> Object.assign(p, v), {})
+// ModuleParser
+export default class ModuleParser {
+	constructor (props = {}) {
+		if (!props.plugins) {
+			console.warn('ModuleParser: No plugins provided, you probably want at least one.')
+			props.plugins = []
+		}
+		this.plugins = props.plugins
 
-export default {
-	allowNull, useId, ...dataTypesExportable,
-	...helpers,
-	modulesParser,
+		// process plugins
+		this.plugins.forEach(plugin=> {
+			try {
+				Object.defineProperty(plugin, 'toString', {
+					enumerable: false,
+					value: function () { return this.namespace },
+				})
+			} catch (err) { /**/ }
+		})
+
+		// attach helpers
+		this.plugins.filter(p=> p.namespace && p.helpers).forEach(
+			({namespace, helpers})=> this[namespace] = helpers)
+
+		// initialize defaults
+		this.moduleInitialiser = getModuleInitialiser(this)
+
+		// initialize data constants
+		this.dataFlags = getDataFlags(this)
+		this.dataTypes = getDataTypes(this)
+
+		// initialize normalizers
+		this.metaNormaliser = getMetaNormaliser(this)
+		this.fieldsNormaliser = getFieldsNormaliser(this)
+		this.actionsNormaliser = getActionsNormaliser(this)
+	}
+
+	// parse one (raw base module)
+	parse (rawModule) {
+		const {plugins} = this
+		const {
+			moduleInitialiser,
+			metaNormaliser,
+			fieldsNormaliser,
+			actionsNormaliser,
+		} = this
+
+		// init, setup defaults, plugins.initialiseModule, etc
+		const module = moduleInitialiser(rawModule)
+			
+		// name, tabelName, description
+		Object.assign(module, metaNormaliser(module))
+		
+		// sub modules
+		if (module.modules)
+			module.modules = this.parseMany(module.modules)
+
+		// fields
+		module.type = Object.assign({}, module.type)
+		module.fields = fieldsNormaliser(module)
+
+		// set custom plugin type for module
+		plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>
+			module.type[namespace] = typeReducer(module))
+
+		// actions, getters
+		// Object.assign(module, actionsNormaliser(module))
+		
+		// // plugins
+		// plugins.map(m=> m.gettersGenerator).filter(v=> v).forEach(f=> f(module))
+		// plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(module))
+
+
+		// attach plugin helpers
+		this.plugins.filter(p=> p.namespace && p.moduleHelpers)
+			.forEach(({namespace, moduleHelpers})=> {
+				if (!module[namespace]) module[namespace] = {}
+				Object.keys(moduleHelpers).forEach(name=> {
+					const field = moduleHelpers[name]
+					if (typeof field === 'function')
+						module[namespace][name] = field(module)
+					else module[namespace][name] = field
+				})
+			})
+
+		return module
+	}
+
+	// parse many
+	parseMany (rawModules) {
+		const modules = {}
+		Object.keys(rawModules).forEach(moduleName=> {
+			const rawModule = rawModules[moduleName]
+			rawModule.name = rawModule.name || moduleName
+			modules[moduleName] = this.parse(rawModule)
+		})
+		return modules
+	}
 }

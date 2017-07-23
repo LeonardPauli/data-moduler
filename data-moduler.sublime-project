@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{ "path": "src" },
-		{ "path": "demo" },
+		{ "path": "examples" },
 		{
 			"path": "/",
 			"folder_include_patterns": ["test", "build", "config"],
@@ -11,7 +11,13 @@
 	],
 	"settings": {
 		"tab_size": 2,
-		"default_line_ending": "unix"
+		"default_line_ending": "unix",
+		"index_exclude_patterns": [
+			"*.log",
+			"node_modules/**",
+			"bower_components/**",
+			"dist/**"
+		],
 	},
 	"build_systems": [{
 		"name": "List",

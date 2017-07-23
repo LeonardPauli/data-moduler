@@ -5,11 +5,11 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon demo/index.js --exec babel-node",
-    "debug": "nodemon demo/index.js --exec babel-node --inspect",
-    "build": "babel src -d dist/src & babel demo -d dist/demo",
+    "dev": "nodemon examples/index.js --exec babel-node",
+    "debug": "nodemon examples/index.js --exec babel-node --inspect",
+    "build": "babel src -d dist/src & babel examples -d dist/examples",
     "serve": "forever dist/index.js",
-    "lint": "eslint --ext .js src,demo"
+    "lint": "eslint --ext .js src,examples"
   },
   "author": "Leonard Pauli",
   "private": true,

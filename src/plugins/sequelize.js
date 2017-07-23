@@ -25,8 +25,8 @@ const defineModels = (connection, modules)=> {
 
 
 
-// typeGenerator
-const typeGenerator = module=> {
+// typeReducer
+const typeReducer = module=> {
 	const {fields} = module
 	const model = {}
 	Object.keys(fields).forEach(k=> {
@@ -41,7 +41,7 @@ const typeGenerator = module=> {
 export default {
 	namespace: 'sql',
 	dataTypes,
-	typeGenerator,
+	typeReducer,
 	helpers: {
 		defineModels,
 	},

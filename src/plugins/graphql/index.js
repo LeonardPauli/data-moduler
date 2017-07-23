@@ -24,11 +24,13 @@ const dataTypes = {
 }
 
 
-const prepare = module=> {
-	module.graphql = module.graphql || {}
+const initialiseModule = _moduler=> module=> {
+	module.graphql = Object.assign({}, module.graphql)
 }
 
-const typeGenerator = module=> {
+
+
+const typeReducer = module=> {
 	const type = {}
 
 	type.name = module.name
@@ -106,9 +108,10 @@ const actionsGenerator = module=> {
 
 export default {
 	namespace: 'graphql',
+	initialiseModule,
+	
 	dataTypes,
-	prepare,
-	typeGenerator,
+	typeReducer,
 	gettersGenerator,
 	actionsGenerator,
 	helpers,

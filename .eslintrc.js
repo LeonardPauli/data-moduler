@@ -114,7 +114,7 @@ module.exports = {
     'lines-around-comment': 'error',
     'lines-around-directive': 'error',
     'max-depth': ['error', 4],
-    'max-len': ['error', {
+    'max-len': ['warn', {
       'tabWidth': 2,
       'code': 100,
       'ignoreTrailingComments': true,
@@ -216,7 +216,7 @@ module.exports = {
     }],
     'no-undef-init': 'error',
     'no-undefined': 'off', // best to just write undefined in ES5
-    'no-undef': 'warn',
+    'no-undef': 'error',
     'no-unmodified-loop-condition': 'error',
     'no-unneeded-ternary': 'error',
     'no-unreachable': 'warn',
@@ -251,7 +251,8 @@ module.exports = {
         '||': 'before',
         '&&': 'before',
         ':': 'ignore',
-        '?': 'before'
+        '?': 'before',
+        '+': 'before',
       }
     }],
     'padded-blocks': 'off', // 'never', yes, but not if tiny block or first line is comment
