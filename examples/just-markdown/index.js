@@ -3,18 +3,25 @@
 
 // Setup the moduler (DataModuler) with plugins
 import DataModuler, {plugins} from '../../src'
-const {markdown} = plugins
-const moduler = new DataModuler({
-	plugins: [markdown()],
+const {markdown, tmpstore} = plugins
+export const moduler = new DataModuler({
+	plugins: [tmpstore()],
 })
 
 // Define the modules (User, Note)
 const { allowNull } = moduler.dataFlags
-const { STRING, MODULE } = moduler.dataTypes
+const { STRING } = moduler.dataTypes
 
 const Color= {
 	fields: {
 		hex: STRING,
+	},
+	mutations: {
+		create: {
+			default: context=> ()=> console.warn(
+				'mutation not implemented /or/ implementation not supported in this platform', context),
+			tmpstore: context=> console.dir({mutation: context.hello, context}),
+		},
 	},
 }
 const User = {
@@ -79,11 +86,4 @@ const rawBaseModule = {
 	modules: {User, Note},
 }
 const baseModule = moduler.parse(rawBaseModule)
-
-
 export default baseModule
-
-// Markdown (export API documentation using baseModule)
-baseModule.markdown.writeFile({
-	outputFile: `${__dirname}/api-documentation.md`,
-})

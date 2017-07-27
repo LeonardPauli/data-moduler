@@ -79,7 +79,7 @@ export default class ModuleParser {
 		const {
 			moduleInitialiser,
 			fieldsNormaliser,
-			// actionsNormaliser,
+			actionsNormaliser,
 		} = this
 
 		// init, setup defaults, plugins.initialiseModule, metaNormaliser, etc
@@ -93,12 +93,12 @@ export default class ModuleParser {
 		module.type = Object.assign({}, module.type)
 		module.fields = fieldsNormaliser(module)
 
+		// actions, getters
+		Object.assign(module, actionsNormaliser(module))
+		
 		// set custom plugin type for module
 		plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>
 			module.type[namespace] = typeReducer(module))
-
-		// actions, getters
-		// Object.assign(module, actionsNormaliser(module))
 		
 		// // plugins
 		// plugins.map(m=> m.gettersGenerator).filter(v=> v).forEach(f=> f(module))

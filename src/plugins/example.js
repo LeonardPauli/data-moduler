@@ -51,25 +51,35 @@ const typeReducer = module=> {
 }
 
 
+// exported helpers
+const writeFile = defaults=> (module, options={})=> {
+	const opt = Object.assign({
+		key: 'default-value',
+	}, defaults, options)
+	const {key} = opt
 
-const defineModels = ()=> {
-
+	// do something with key
 }
 
 
-export default {
-	namespace,
+export default function Example (defaults) {
+	return {
+		namespace,
 
-	initialiseModule,
-	dataTypes,
-	typeReducer,
+		initialiseModule,
+		dataTypes,
+		typeReducer,
 
-	actions: {
-		mutationWrapper: (context, fn)=> fn(context),
-		fetcherWrapper: (context, fn)=> fn(context),
-	},
+		actions: {
+			mutationWrapper: (context, fn)=> fn(context),
+			fetcherWrapper: (context, fn)=> fn(context),
+		},
 
-	helpers: {
-		defineModels,
-	},
+		helpers: {
+			writeFile: writeFile(defaults),
+		},
+		moduleHelpers: {
+			writeFile: module=> options=> writeFile(defaults)(module, options),
+		},
+	}
 }

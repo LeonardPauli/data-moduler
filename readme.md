@@ -38,10 +38,37 @@ Created by Leonard Pauli, July 2017
 	(schema, graphiql, nested modules, primitive types, comments, actions/getters)
 - [ ] GraphQL relation types
 - [ ] CRUD (markdown + tmpstore + graphql)
+- [ ] bi-directional relations
+	(entity describing relation (many->many), one->many, one->one)
+		(keep in mind; both ability to work on relational-, documentbased-, and graph databases)
+- [ ] sequelize plugin
+- [ ] access-control / authorised field
+
 - [ ] express-rest plugin (endpoints)
 - [ ] express-rest support with markdown plugin
 	(shouldn't need to know about each other though... express-rest write to some documentation field on model?)
-- [ ] sequelize plugin
-- [ ] access-control / authorised field
+
 - [ ] vuex code generation (not in memory construction, write to file for now)
 - [ ] dataloader functionality (ie. don't make unnecessary db queries)
+- [ ] validation plugin (?)
+- [ ] dummy/faker-data plugin (?)
+
+## Notes
+
+functionWrappers:
+	mutation: (context, fn)=> fn(context)
+	fetcher: (context, fn)=> fn(context)
+
+
+mutations
+	mutationName1: context=> typeSpecificFunction
+	mutationName2:
+		default: context=> ()=> functionContent
+		namespace1: context=> typeSpecificFunction
+		namespace2: context=> typeSpecificFunction
+		comment: '...'
+
+fetchers
+
+actions
+getters

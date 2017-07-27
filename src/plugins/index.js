@@ -1,11 +1,13 @@
-import expressRest from './express-rest'
-import sequelize from './sequelize'
-import graphql from './graphql'
 import markdown from './markdown'
+import tmpstore from './tmpstore'
+import graphql from './graphql'
+import sequelize from './sequelize'
+import expressRest from './express-rest'
 
 export default {
-	expressRest,
-	sequelize,
-	graphql,
 	markdown,
+	tmpstore,
+	graphql,
+	sequelize,
+	expressRest,
 }
