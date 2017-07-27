@@ -25,7 +25,8 @@ const metaNormaliser = module=> {
 			.replace(/^[A-Z]/, l=> l.toLowerCase())
 			.replace(/[A-Z]/g, l=> '_'+l.toLowerCase())
 
-	props.comment = comment // no autogen
+	if (typeof comment !== 'undefined')
+		props.comment = comment // no autogen
 
 	props.documentationURL = documentationURL
 		|| (name && `#${name.toLowerCase()}`)

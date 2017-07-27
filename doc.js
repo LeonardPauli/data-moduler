@@ -98,3 +98,55 @@ export default {
 		path: ':id-Model/my-custom-action',
 	}
 }
+
+
+
+
+
+
+
+// Relations
+
+// no - first read all modules fields, keep list of them all,
+// 	error if same name, write back name to raw + set isModel: true,
+// 	then check if field has isModule, then use name field to connect
+// const Teacher = {
+// 	fields: {
+// 		name: STRING,
+// 		colors: {
+// 			name: 'TeacherColor',
+// 			fields: {
+// 				name: STRING,
+// 			}
+// 		}
+// 	},
+// }
+const Teacher = {
+	modules: {
+		TeacherColor: {
+			fields: {
+				name: STRING,
+			}
+		},
+		// TeacherColor.fields: {
+		// 	name: STRING,
+		// },
+	},
+	fields: {
+		name: STRING,
+		colors: TeacherColor,
+	},
+}
+
+// import Teacher from './Teacher'
+const Student = {
+	fields: {
+		name: STRING,
+		teacher: Teacher,
+	},
+}
+
+moduler.parse({
+	modules: {Teacher, Student}
+})
+

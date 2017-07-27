@@ -6,8 +6,8 @@
 
 
 // getFieldNormaliser -> bindModule -> fieldNormaliser
-export const getFieldNormaliser = ({dataTypes})=> module=> _rawField=> {
-	const { STRING } = dataTypes
+export const getFieldNormaliser = ({dataTypes, rawModules})=> module=> _rawField=> {
+	const { STRING, MODULE } = dataTypes
 
 	// default field
 	// (use of shorthand (ie. {STRING}) could be problematic here)
@@ -22,6 +22,13 @@ export const getFieldNormaliser = ({dataTypes})=> module=> _rawField=> {
 		allowNull: false,
 	}
 
+	// field: Module,
+	// fix direct type; ie
+	// 	fields.user: RawUser -> fields.user: {type:{_model:User}}
+	if (_rawField._module || _rawField._isModule) // if raw or initialized
+		return Object.assign({}, fieldDefaults, {type: MODULE.of(_rawField).type})
+
+
 	// assign defaults
 	const rawField = Object.assign({}, fieldDefaults, _rawField)
 	const field = {}
@@ -29,10 +36,28 @@ export const getFieldNormaliser = ({dataTypes})=> module=> _rawField=> {
 	// process rawField properties to field
 	Object.keys(rawField).forEach(k=> {
 
+		// shouldUnwrapType
+		if (k=='shouldUnwrapType') return
+		if (k=='type' && rawField.type) {
+			if (rawField.type.shouldUnwrapType)
+				return field.type = rawField.type.type
+
+			// ie. field: {type: Module}
+			if (rawField.type._module || rawField.type._isModule)
+				return field.type = MODULE.of(rawField.type).type
+		}
+
 		// unwrap wraped types
+		// ie. field: {STRING}
+		// ('field: STRING', same as 'field: {type:STRING}', handled elsewhere)
 		const dataType = dataTypes[k]
 		if (dataType) return field.type = rawField[k].type
 
+		// ie. field: {Module},
+		const rawModule = rawModules[k]
+		if (rawModule) return field.type = MODULE.of(rawModule).type
+
+		// otherwise
 		field[k] = rawField[k]
 		// TODO: validate values
 		// throw new Error(`data-moduler: unknown field '${k}' property in module '${module.name}'`)
@@ -64,13 +89,16 @@ const getFieldsNormaliser = moduler=> module=> {
 	const fieldNormaliser = getFieldNormaliser(moduler)(module)
 	const rawFields = Object.assign({}, module.fields)
 
-	// add modules
-	const modules = module.modules || {}
-	Object.keys(modules).forEach(k=> {
-		const rawModule = modules[k]
-		const field = rawFields[k] = Object.assign({}, rawFields[k])
-		field.type = MODULE.of(rawModule)
-	})
+	// add modules - nah, for non entities, add modules as field
+	// TODO: what about sub-modules for non-entities with GraphQL?
+	if (!module.isEntity) {
+		const modules = module.modules || {}
+		Object.keys(modules).forEach(k=> {
+			const rawModule = modules[k]
+			const field = rawFields[k] = Object.assign({}, rawFields[k])
+			field.type = MODULE.of(rawModule).type
+		})
+	}
 
 	// process fields
 	const fields = {}

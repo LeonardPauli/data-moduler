@@ -30,7 +30,7 @@ Created by Leonard Pauli, July 2017
 - [x] Basic/primitive types (with comments)
 - [x] Nested modules
 - [x] Basic markdown plugin
-- [ ] Relation type (normaliser + markdown)
+- [x] Relation type (normaliser + markdown)
 - [ ] Mutations/fetchers (normaliser + markdown + tmpstore
 	(just store in memory store, mostly as base for other stores))
 - [ ] Actions/getters (normaliser + markdown)

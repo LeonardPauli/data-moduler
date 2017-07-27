@@ -10,34 +10,20 @@ import getDataFlags from './getDataFlags'
 import getDataTypes from './getDataTypes'
 
 import getMetaNormaliser from './getMetaNormaliser'
+import getModuleInitialiser from './getModuleInitialiser'
 import getFieldsNormaliser from './getFieldsNormaliser'
 import getActionsNormaliser from './getActionsNormaliser'
 
-const getModuleInitialiser = moduler=> rawModule=> {
-	const {plugins} = moduler
-	const module = Object.assign({}, rawModule)
-
-	// pre
-	module.isEntity = typeof rawModule.isEntity === 'undefined'
-		? !!rawModule.fields
-		: rawModule.isEntity
-
-	// plugins
-	plugins.map(p=> p.initialiseModule).filter(v=> v).forEach(f=> f(module))
-
-	// helpers
-	Object.defineProperty(module, 'toString', {
-		enumerable: false,
-		value: function () { return this.name },
-	})
-
-	return module
-}
 
 // ModuleParser
 export default class ModuleParser {
 	constructor (props = {}) {
+		// bind this
+		'registerModule,parse,initialiseMany,parseMany'.split(',')
+			.forEach(k=> this[k] = this[k].bind(this))
+
 		if (!props.plugins) {
+			// eslint-disable-next-line
 			console.warn('ModuleParser: No plugins provided, you probably want at least one.')
 			props.plugins = []
 		}
@@ -48,7 +34,7 @@ export default class ModuleParser {
 			try {
 				Object.defineProperty(plugin, 'toString', {
 					enumerable: false,
-					value: function () { return this.namespace },
+					value () { return this.namespace },
 				})
 			} catch (err) { /**/ }
 		})
@@ -68,27 +54,40 @@ export default class ModuleParser {
 		this.metaNormaliser = getMetaNormaliser(this)
 		this.fieldsNormaliser = getFieldsNormaliser(this)
 		this.actionsNormaliser = getActionsNormaliser(this)
+
+		// reset rawModules
+		this.rawModules = {}
+	}
+
+	// enables referencing module with rawModule
+	registerModule (rawModule, name=rawModule.name) {
+		const {rawModules} = this
+		if (!name) throw new Error('moduleParser.registerModule: module.name is'
+			+' required, keys: '+Object.keys(rawModule))
+		// if (rawModules[name] == rawModule) return // already registered
+		if (rawModules[name]) throw new Error('moduleParser.registerModule: '
+			+`a module with name '${name}' is already registered, `
+			+(rawModules[name] == rawModule?' and it\'s the same': 'but they\'t different'))
+
+		rawModule.name = name // modify raw module for references to work
+		rawModules[name] = rawModule
 	}
 
 	// parse one (raw base module)
-	parse (rawModule) {
+	parse (rawModule, {alreadyInitialized}={}) {
 		const {plugins} = this
 		const {
 			moduleInitialiser,
-			metaNormaliser,
 			fieldsNormaliser,
-			actionsNormaliser,
+			// actionsNormaliser,
 		} = this
 
-		// init, setup defaults, plugins.initialiseModule, etc
-		const module = moduleInitialiser(rawModule)
-			
-		// name, tabelName, description
-		Object.assign(module, metaNormaliser(module))
+		// init, setup defaults, plugins.initialiseModule, metaNormaliser, etc
+		const module = alreadyInitialized? rawModule: moduleInitialiser(rawModule)
 		
-		// sub modules
+		// sub modules - should already be initialised in moduleInitialiser
 		if (module.modules)
-			module.modules = this.parseMany(module.modules)
+			module.modules = this.parseMany(module.modules, {alreadyInitialized: true})
 
 		// fields
 		module.type = Object.assign({}, module.type)
@@ -121,14 +120,39 @@ export default class ModuleParser {
 		return module
 	}
 
-	// parse many
-	parseMany (rawModules) {
+	// initialise many, recursively
+	initialiseMany (rawModules) {
+		const {moduleInitialiser} = this
+
+		// first, recursively initialize all modules
 		const modules = {}
 		Object.keys(rawModules).forEach(moduleName=> {
 			const rawModule = rawModules[moduleName]
 			rawModule.name = rawModule.name || moduleName
-			modules[moduleName] = this.parse(rawModule)
+			const module = moduleInitialiser(rawModule)
+			modules[module.name] = module
 		})
+
+		return modules
+	}
+
+	// parse many
+	parseMany (rawModules, {alreadyInitialized}={}) {
+		const {initialiseMany} = this
+
+		// first, recursively initialize all modules
+		const initialisedModules = alreadyInitialized
+			? rawModules
+			: initialiseMany(rawModules)
+
+		// then, recursively parse them
+		const modules = {}
+		Object.keys(initialisedModules).forEach(k=> {
+			const initialised = initialisedModules[k]
+			modules[k] = this.parse(initialised, {alreadyInitialized: true})
+		})
+
+		// return parsed modules
 		return modules
 	}
 }

@@ -1,3 +1,4 @@
+// stringFromObject; similar to console.dir, although more rim/yaml-like
 const stringFromObject = (obj, depth=1, options={}, prefix='')=> {
 	const opt = Object.assign({
 		keepCollapsed: [],
@@ -6,28 +7,41 @@ const stringFromObject = (obj, depth=1, options={}, prefix='')=> {
 	}, options)
 	const {indentation, maxObjectStringLength} = opt
 
+	// only same object expand once
 	const isObject = typeof obj==='object'
 	const keepCollapsed = isObject && opt.keepCollapsed.indexOf(obj)>=0
 	if (isObject && !keepCollapsed) opt.keepCollapsed.push(obj)
 
+	// render object name
 	const getObjectName = obj=> {
+		if (obj.toString === [].toString) return 'Array'
 		const objStr = obj+''
 		const useObjStr = objStr!=='[object Object]'
-		return useObjStr? objStr: null
+		return useObjStr? objStr.replace(/\n(.| |\n)*$/, '...'): null
 	}
 
-	if (depth==0 || !isObject || keepCollapsed) {
-		if (typeof obj === 'number' || typeof obj === 'boolean') {
+	// when value shouldn't be futher expanded
+	if (depth==0 || !isObject || keepCollapsed || !obj) {
+
+		// primitive
+		if (typeof obj === 'number' || typeof obj === 'boolean')
 			return `\x1b[33m${obj}\x1b[0m`
-		} else if (typeof obj === 'string') {
+
+		// string
+		if (typeof obj === 'string')
 			return `\x1b[32m${obj.replace(/\n/g, '\n'+prefix)}\x1b[0m`
-		} else if (typeof obj === 'function') {
+
+		// function
+		if (typeof obj === 'function')
 			return `\x1b[36m${(obj+'').split('\n')[0].replace(/function (.*) {/ig, '$1=> ...')}\x1b[0m`
-		} else if (typeof obj === 'undefined') {
+
+		// undefined or null
+		if (typeof obj === 'undefined')
 			return '\x1b[37mundefined\x1b[0m'
-		} else if (obj === null) {
+		if (obj === null)
 			return '\x1b[37mnull\x1b[0m'
-		}
+
+		// othervise; object
 		try {
 			const name = getObjectName(obj)
 			const str = (keepCollapsed || name?'-> ':'')
@@ -40,6 +54,7 @@ const stringFromObject = (obj, depth=1, options={}, prefix='')=> {
 		}
 	}
 
+	// if value might be futher expanded
 	const keys = Object.keys(obj)
 	if (!keys.length) return '{}'
 	const name = getObjectName(obj)

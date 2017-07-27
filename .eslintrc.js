@@ -29,6 +29,7 @@ module.exports = {
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
 
+    'no-underscore-dangle': ["off", { "allowAfterThis": true }],
 
 
     'accessor-pairs': 'error',
@@ -62,7 +63,7 @@ module.exports = {
     'comma-dangle': ['error', 'always-multiline'],
     'comma-spacing': ['warn', { before: false, after: true }],
     'comma-style': ['error', 'last'],
-    'complexity': ['error', { 'max': 10 }],
+    'complexity': ['warn', { 'max': 10 }],
     'computed-property-spacing': ['error', 'never'],
     'consistent-return': 'off', // would like consistant having a return
     // statement or not, while allowing different return types

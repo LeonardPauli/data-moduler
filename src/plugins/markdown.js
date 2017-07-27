@@ -62,46 +62,111 @@ const tableFromRows = rows=> {
 	return '\n'+header+'\n'+body
 }
 
+
+// limitStrLength
 const limitStrLength = (str, n=100)=>
 	str.length>n ? str.substr(0, n-3)+'...' : str
 
 
+// getModuleMDTypeToMDString
+const getModuleMDTypeToMDString = type=> isBase=> {
+	const {
+		title, description,
+		fieldsTable, // titleInList, subtitleInList,
+		modules,
+	} = type
+	
+	const doc = []
+	const addBreak = n=> Array(n).fill('').forEach(v=> doc.push(v))
+
+	if (!isBase) {
+		doc.push('### '+title) // title
+		if (description) doc.push(description) // description
+		if (fieldsTable) doc.push(tableFromRows(fieldsTable)) // fieldsTable
+		return doc.join('\n')
+	}
+
+	doc.push('# '+title) // title
+	if (description) doc.push(description) // description
+
+	// plugins sections
+	// #### Setup environment ...
+	// #### GraphQL ...
+	// #### CRUD Operations ...
+	// #### Authorisation ...
+
+	if (modules) { // modules
+		addBreak(2)
+		doc.push('## Modules')
+		addBreak(1)
+
+		// append module outline + get flatten list
+		const allModules = []
+		const indentation = '  '
+		const walk = (modules, prefix='')=> modules.map(module=> {
+			allModules.push(module)
+			const title = prefix+'- '+module.titleInList
+			const slug = limitStrLength(module.subtitleInList, 100)
+			return title+slug
+				+ (!module.modules? '': '\n'+walk(module.modules, prefix+indentation))
+		}).join('\n')
+		const modulesOutline = walk(modules)
+		doc.push(modulesOutline)
+		
+		// append module sections
+		allModules.forEach(module=> {
+			addBreak(2)
+			doc.push(module.toString())
+		})
+	}
+
+	return doc.join('\n')
+}
+
+
+
 // typeReducer
 const typeReducer = module=> {
-	const {fields, modules, name, title, comment, isEntity} = module
-	const titleMD = title? `${title} (${name})` : name
-	const section = [`### ${titleMD}`]
-	if (comment) section.push(comment)
+	const {
+		name, title, comment,
+		documentationURL,
+		fields, modules,
+	} = module
+	
+	const mdLink = (text, link)=> link
+		?	`[${text}](${link})`
+		: text
 
-	if (fields && isEntity) {
-		const rows = [['Name', 'Type', 'Comment']]
-		Object.keys(fields).forEach(fieldName=> {
-			const field = fields[fieldName]
-			const typeMD = (field.documentationURL
-				? `[${field.type.name}](${field.documentationURL})`
-				: field.type.name) + (field.allowNull? '?': '')
+	// pre-process module
+	const type = {
+		title: name+(title?`; ${title}`:''),
+		description: comment,
+		
+		titleInList: mdLink(name, documentationURL),
+		subtitleInList:
+			(title?` - ${title}`:'')
+			+ (comment?`, ${comment}`:''),
 
-			rows.push([fieldName, typeMD, limitStrLength(field.comment || '', 80)])
-		})
-		section.push(tableFromRows(rows))
+
+		fieldsTable: fields && [
+			['Field', 'Type', 'Comment'],
+			...Object.keys(fields).map(fieldName=> {
+				const field = fields[fieldName]
+				return [
+					mdLink(fieldName, field.documentationURL),
+					mdLink(field.type.name, field.type.documentationURL)+(field.allowNull? '?': ''),
+					limitStrLength(field.comment || '', 80),
+				]
+			}),
+		],
+
+		modules: modules && Object.keys(modules).map(k=> modules[k]).map(m=> m.type[namespace]),
 	}
-	if (modules && !isEntity) {
-		section.push('#### Modules')
-		const rows = [['Name', 'Comment']]
-		Object.keys(modules).forEach(name=> {
-			const module = modules[name]
-			const mName = module.name||'-'
-			const nameMD = `[${mName}](${module.documentationURL})`
-			rows.push([nameMD, limitStrLength(module.comment || '', 80)])
-		})
-		section.push(tableFromRows(rows))
-		section.push('')
-		const subModulesMD = Object.keys(modules).map(k=> modules[k]).map(m=> m.type[namespace])
-		section.push(subModulesMD.join('\n\n'))
-	}
 
-
-	return section.join('\n')
+	// expose processed-type to markdown-string function
+	type.toString = getModuleMDTypeToMDString(type)
+	
+	return type
 }
 
 
@@ -114,7 +179,7 @@ const writeFile = defaults=> (module, options={})=> {
 
 	const fs = require('fs')
 	return new Promise((res, rej)=> {
-		fs.writeFile(outputFile, module.type[namespace], err=> err?rej(err):res())
+		fs.writeFile(outputFile, module.type[namespace].toString(true), err=> err?rej(err):res())
 	})
 }
 

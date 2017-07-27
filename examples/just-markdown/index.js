@@ -10,10 +10,20 @@ const moduler = new DataModuler({
 
 // Define the modules (User, Note)
 const { allowNull } = moduler.dataFlags
-const { STRING } = moduler.dataTypes
+const { STRING, MODULE } = moduler.dataTypes
 
-const User = {
+const Color= {
 	fields: {
+		hex: STRING,
+	},
+}
+const User = {
+	modules: {
+		Color,
+	},
+	fields: {
+		rang1: Color,
+		rang2: {type: Color},
 		name: STRING,
 		title: { STRING, allowNull,
 			comment: '*ie.* CEO, or Happiness Hero',
@@ -29,6 +39,7 @@ const Note = {
 	comment: '*Tips:* Write one note every day in the morning',
 	fields: {
 		text: STRING,
+		user: User,
 	},
 	// mutations: {
 	// 	set: {
@@ -62,7 +73,7 @@ const Note = {
 
 // Parse the base module (including all the models)
 const rawBaseModule = {
-	// name: 'BaseModule',
+	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
 	modules: {User, Note},
