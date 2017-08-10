@@ -13,10 +13,15 @@ const initialiseModule = moduler=> module=> {
 
 	// optionally setup default CRUD mutation/fetcher adapters
 
+	const fn = ({store, module: {name}}, input)=> store.collections[name]
+			.createDocument({...input, id: id++})
+	fn.comment = 'Note from a plugin'
+
 	module.mutations.create = { isStatic,
+		type: STRING,
+		returnTypeDescription: 'If ok or not',
 		input: {name: STRING},
-		[namespace]: ({store, module: {name}}, input)=> store.collections[name]
-			.createDocument({...input, id: id++}),
+		[namespace]: fn,
 	}
 
 	module.getters.load = {
@@ -25,6 +30,7 @@ const initialiseModule = moduler=> module=> {
 	}
 
 	module.getters.list = { isStatic,
+		comment: 'Has filter ability',
 		input: {
 			q: { STRING, allowNull,
 				comment: 'Filter name',
@@ -130,6 +136,13 @@ export default function TmpStorePlugin (defaults) {
 		},
 		moduleHelpers: {
 			attach: module=> options=> attach(defaults)(module, options),
+		},
+
+		documentation: {
+			title: 'tmpstore - Temporary storage (caching)',
+			description: 'By saving all data on the heap, native to JavaScript, this store becomes very'
+			+ ' fast - until it exceeds the available RAM - or restarts, which inherently removes'
+			+ ' all the data.',
 		},
 	}
 }

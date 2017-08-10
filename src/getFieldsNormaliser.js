@@ -43,6 +43,10 @@ export const getFieldNormaliser = ({dataTypes, rawModules})=> module=> _rawField
 	// process rawField properties to field
 	Object.keys(rawField).forEach(k=> {
 
+		// comment
+		if (k=='comment')
+			return field.comment = rawField.comment
+
 		// shouldUnwrapType
 		if (k=='shouldUnwrapType') return
 		if (k=='type' && rawField.type) {

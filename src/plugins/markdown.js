@@ -67,13 +67,28 @@ const tableFromRows = rows=> {
 const limitStrLength = (str, n=100)=>
 	str.length>n ? str.substr(0, n-3)+'...' : str
 
+const mdLink = (text, link)=> link
+	?	`[${text}](${link})`
+	: text
+
+const mdTypeLink = field=> mdLink(
+	field.type.name,
+	field.type.documentationURL)+(field.allowNull? '?': ''
+)
+
+const mdIndent = '  '
+
 
 // getModuleMDTypeToMDString
-const getModuleMDTypeToMDString = type=> isBase=> {
+const getModuleMDTypeToMDString = type=> ({
+	isBase,
+	sectionAfterDescription='',
+}={})=> {
 	const {
 		title, description,
 		fieldsTable, // titleInList, subtitleInList,
 		modules,
+		actions,
 	} = type
 	
 	const doc = []
@@ -83,11 +98,76 @@ const getModuleMDTypeToMDString = type=> isBase=> {
 		doc.push('### '+title) // title
 		if (description) doc.push(description) // description
 		if (fieldsTable) doc.push(tableFromRows(fieldsTable)) // fieldsTable
+		if (sectionAfterDescription.length) { // sectionAfterDescription
+			addBreak(1); doc.push(sectionAfterDescription)
+		}
+
+
+		if (actions) {
+			addBreak(1)
+			doc.push('#### Actions')
+			addBreak(1)
+
+			const addActionsGroup = (title, actions)=> {
+				const actionNames = Object.keys(actions)
+				if (!actionNames.length) return
+
+				doc.push(`###### ${title}`)
+				addBreak(1)
+
+				actionNames.forEach(actionName=> {
+					const action = actions[actionName]
+					const {type, isStatic, comment, input, returnTypeDescription, rawActions} = action
+					const returnType = type
+						? `: ${mdTypeLink(type)}`
+						: ''
+					const mdStatic = !isStatic?'': ' *static*'
+
+					const inputNames = input? Object.keys(input): []
+					
+					doc.push(`- __${actionName}__${returnType}${mdStatic}`) // title
+					if (comment) doc.push(`${mdIndent}> ${comment}`) // general comment
+					if (comment && (inputNames.length || returnTypeDescription))
+						doc.push(`${mdIndent}>`) // break
+
+					// input fields
+					inputNames.forEach(name=> doc.push(`${mdIndent}> **${name}:** ${mdTypeLink(input[name])}`
+						+ (input[name].comment?' '+input[name].comment:''))) // comment
+
+					if (returnTypeDescription) // returns comment
+						doc.push(`${mdIndent}> **returns:** ${returnTypeDescription}`)
+
+					// plugins
+					const pluginNames = Object.keys(rawActions)
+					const pluginsSection = pluginNames
+						.map(name=> [name, rawActions[name].comment]).filter(([_, t])=> t)
+						.map(([name, comment])=> `${mdIndent}${name}: ${comment}`)
+						.join('\n')
+
+					if (pluginsSection) {
+						doc.push('')
+						doc.push(pluginsSection)
+					}
+
+					// end break
+					doc.push('')
+				})
+			}
+
+			addActionsGroup('Mutations', actions.mutations)
+			addActionsGroup('Getters', actions.getters)
+			// doc.pop() // remove last break
+		}
+
 		return doc.join('\n')
 	}
 
 	doc.push('# '+title) // title
 	if (description) doc.push(description) // description
+
+	if (sectionAfterDescription.length) { // sectionAfterDescription
+		addBreak(2); doc.push(sectionAfterDescription)
+	}
 
 	// plugins sections
 	// #### Setup environment ...
@@ -116,6 +196,7 @@ const getModuleMDTypeToMDString = type=> isBase=> {
 		// append module sections
 		allModules.forEach(module=> {
 			addBreak(2)
+			doc.push('---')
 			doc.push(module.toString())
 		})
 	}
@@ -124,6 +205,12 @@ const getModuleMDTypeToMDString = type=> isBase=> {
 }
 
 
+const reduceActions = actions=> {
+	const actionNames = Object.keys(actions)
+	if (!actions || !actionNames.length) return null
+	return actions
+}
+
 
 // typeReducer
 const typeReducer = module=> {
@@ -131,12 +218,9 @@ const typeReducer = module=> {
 		name, title, comment,
 		documentationURL,
 		fields, modules,
+		mutations, getters,
 	} = module
 	
-	const mdLink = (text, link)=> link
-		?	`[${text}](${link})`
-		: text
-
 	// pre-process module
 	const type = {
 		title: name+(title?`; ${title}`:''),
@@ -154,7 +238,7 @@ const typeReducer = module=> {
 				const field = fields[fieldName]
 				return [
 					mdLink(fieldName, field.documentationURL),
-					mdLink(field.type.name, field.type.documentationURL)+(field.allowNull? '?': ''),
+					mdTypeLink(field),
 					limitStrLength(field.comment || '', 80),
 				]
 			}),
@@ -162,6 +246,13 @@ const typeReducer = module=> {
 
 		modules: modules && Object.keys(modules).map(k=> modules[k]).map(m=> m.type[namespace]),
 	}
+
+	type.actions = {
+		mutations: reduceActions(mutations),
+		getters: reduceActions(getters),
+	}
+	if (!type.actions.mutations && !type.actions.getters)
+		type.actions = null
 
 	// expose processed-type to markdown-string function
 	type.toString = getModuleMDTypeToMDString(type)
@@ -174,12 +265,25 @@ const typeReducer = module=> {
 const writeFile = defaults=> (module, options={})=> {
 	const opt = Object.assign({
 		outputFile: 'api-specification.md',
+		includedPluginDescriptions: [],
 	}, defaults, options)
-	const {outputFile} = opt
+	const {outputFile, includedPluginDescriptions} = opt
+
+	const section = includedPluginDescriptions.map(plugin=> plugin.documentation)
+		.filter(d=> d).map(d=>
+			`### ${d.title}\n`
+			+ `${d.description}`
+		)
+		.join('\n\n\n')
+
+	const txt = module.type[namespace].toString({
+		isBase: true,
+		sectionAfterDescription: section,
+	})
 
 	const fs = require('fs')
 	return new Promise((res, rej)=> {
-		fs.writeFile(outputFile, module.type[namespace].toString(true), err=> err?rej(err):res())
+		fs.writeFile(outputFile, txt, err=> err?rej(err):res())
 	})
 }
 

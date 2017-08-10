@@ -5,7 +5,7 @@
 import DataModuler, {plugins} from '../../src'
 const {markdown, tmpstore} = plugins
 export const moduler = new DataModuler({
-	plugins: [tmpstore()],
+	plugins: [tmpstore(), markdown()],
 })
 
 // Define the modules (User, Note)
@@ -17,7 +17,7 @@ const Color= {
 		hex: STRING,
 	},
 	mutations: {
-		create: {
+		// create: {
 			// User,
 			// BOOLEAN,
 			// type: User,
@@ -25,24 +25,25 @@ const Color= {
 
 			// input: User,
 			// input: INT,
-			default: context=> console.warn(
-				'mutation not implemented /or/ implementation not supported in this platform', context),
-			tmpstore: context=> console.dir({mutation: context.hello, context}),
-		},
+			// default: context=> console.warn(
+			// 	'mutation not implemented /or/ implementation not supported in this platform', context),
+			// tmpstore: context=> console.dir({mutation: context.hello, context}),
+		// },
 	},
 }
 const User = {
+	comment: 'Everyone accessing the system are users, even bots',
 	modules: {
-		// Color,
+		Color,
 	},
 	fields: {
 		// lal: SELF,
 		name: STRING,
-		// rang1: Color,
+		rang1: Color,
 		// rang2: {type: Color},
-		// title: { STRING, allowNull,
-		// 	comment: '*ie.* CEO, or Happiness Hero',
-		// },
+		title: { STRING, allowNull,
+			comment: '*ie.* CEO, or Happiness Hero',
+		},
 	},
 	// getters: {
 	// 	uppercaseName: { STRING,
@@ -115,7 +116,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {User},
+	modules: {User, Note},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule

@@ -13,29 +13,30 @@ import baseModule, {moduler} from './just-markdown'
 
 
 // Markdown (export API documentation using baseModule)
-// baseModule.markdown.writeFile({
-// 	outputFile: `${__dirname}/api-documentation.md`,
-// })
+baseModule.markdown.writeFile({
+	outputFile: `${__dirname}/api-documentation.md`,
+	includedPluginDescriptions: moduler.plugins,
+})
 
-const store = new moduler.tmpstore.Store()
-moduler.tmpstore.store = store // for CRUD actions
-baseModule.tmpstore.attach({store})
+// const store = new moduler.tmpstore.Store()
+// moduler.tmpstore.store = store // for CRUD actions
+// baseModule.tmpstore.attach({store})
 // baseModule.mutations.create.tmpstore()
 // log(baseModule, 7)
 // log(baseModule.modules, 10)
 
-const {User} = baseModule.modules
-log('\nCREATE')
-User.mutations.create.tmpstore({name: 'Hugo'})
-User.mutations.create.tmpstore({name: 'Hanna'})
-User.mutations.create.tmpstore({name: 'Erik'})
-log('\nLIST'); log(User.getters.list.tmpstore())
-log('\nLOAD'); log(User.getters.load.tmpstore({id: 0})())
-log('\nCREATE'); log(User.mutations.create.tmpstore({name: 'Lo'}))
-log('\nDELETE'); log(User.mutations.delete.tmpstore({id: '1'})())
-log('\nUPDATE'); log(User.mutations.update.tmpstore({id: '0'})({name: 'Hugosan'}))
-log('\nLIST'); log(User.getters.list.tmpstore({name: 'o'}))
+// const {User} = baseModule.modules
+// log('\nCREATE')
+// User.mutations.create.tmpstore({name: 'Hugo'})
+// User.mutations.create.tmpstore({name: 'Hanna'})
+// User.mutations.create.tmpstore({name: 'Erik'})
+// log('\nLIST'); log(User.getters.list.tmpstore())
+// log('\nLOAD'); log(User.getters.load.tmpstore({id: 0})())
+// log('\nCREATE'); log(User.mutations.create.tmpstore({name: 'Lo'}))
+// log('\nDELETE'); log(User.mutations.delete.tmpstore({id: '1'})())
+// log('\nUPDATE'); log(User.mutations.update.tmpstore({id: '0'})({name: 'Hugosan'}))
+// log('\nLIST'); log(User.getters.list.tmpstore({name: 'o'}))
 
-
+log(baseModule.modules.User)
 console.log('-----------------------------------------------------------------')
 for (let i=0; i < 10; i++) console.log('\n')

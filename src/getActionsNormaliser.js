@@ -100,6 +100,9 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 		Object.keys(rawAction).forEach(key=> {
 			const field = rawAction[key]
 
+			// consume comment
+			if (key=='comment' || key=='returnTypeDescription')
+				return action[key] = field
 			
 			// consume datatype type ie. {STRING, ...} vs {type: STRING, ...}
 			const dataType = dataTypes[key]
