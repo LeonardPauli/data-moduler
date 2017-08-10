@@ -17,6 +17,27 @@ const getListOf = plugins=> ({type: rawInnerType})=> module=> {
 }
 
 
+const moduleTypeUnwrapper = _moduler=> module=> {
+	// module type is a wrapper around the module
+	// const getModuleType = _module=> {
+	// 	const type = {_module}
+	// 	Object.defineProperty(type, 'name', {
+	// 		enumerable: true,
+	// 		get () { return this._module.name },
+	// 	})
+	// 	Object.defineProperty(type, 'toString', {
+	// 		enumerable: false,
+	// 		value () { return this.name },
+	// 	})
+	// 	return type
+	// }
+
+	if (module._isModule) return {type: module} // if already initialised
+	if (module._module) return {type: module._module} // get initialized from raw
+	throw new Error(`data-moduler.MODULE.of(${module.name}): rawModule not initialised`)
+	// return {type: module} // rawModule._module will point to initialised module
+}
+
 
 // defaultDataTypes
 const defaultDataTypes = {
@@ -34,30 +55,10 @@ const defaultDataTypes = {
 			},
 		},
 	},
-	SELF: module=> module.type,
+	SELF: moduleTypeUnwrapper,
 	MODULE: {
 		statics: {
-			of: _moduler=> module=> {
-
-				// module type is a wrapper around the module
-				// const getModuleType = _module=> {
-				// 	const type = {_module}
-				// 	Object.defineProperty(type, 'name', {
-				// 		enumerable: true,
-				// 		get () { return this._module.name },
-				// 	})
-				// 	Object.defineProperty(type, 'toString', {
-				// 		enumerable: false,
-				// 		value () { return this.name },
-				// 	})
-				// 	return type
-				// }
-
-				if (module._isModule) return {type: module} // if already initialised
-				if (module._module) return {type: module._module} // get initialized from raw
-				throw new Error(`data-moduler.MODULE.of(${module.name}): rawModule not initialised`)
-				// return {type: module} // rawModule._module will point to initialised module
-			},
+			of: moduleTypeUnwrapper,
 		},
 	},
 	URL: {},
@@ -108,6 +109,8 @@ const getDataTypes = moduler=> {
 	Object.keys(dataTypes).forEach(typeName=> {
 		const original = dataTypes[typeName]
 
+		if (typeof original === 'function') return
+
 		try {
 			original.name = original.name || typeName
 		} catch (err) { /**/ }
@@ -125,6 +128,10 @@ const getDataTypes = moduler=> {
 	const wrappedDataTypes = {}
 	Object.keys(dataTypes).forEach(k=> {
 		const original = dataTypes[k]
+
+		if (typeof original === 'function')
+			return wrappedDataTypes[k] = original(moduler)
+
 		const wrapped = { type: original, shouldUnwrapType: true }
 		wrappedDataTypes[k] = wrapped
 		

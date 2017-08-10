@@ -22,11 +22,18 @@ export const getFieldNormaliser = ({dataTypes, rawModules})=> module=> _rawField
 		allowNull: false,
 	}
 
+
+	// field: SELF
+	// field: module=> ...
+	if (typeof _rawField == 'function')
+		return Object.assign({}, fieldDefaults, {type: _rawField(module).type})
+
 	// field: Module,
 	// fix direct type; ie
 	// 	fields.user: RawUser -> fields.user: {type:{_model:User}}
 	if (_rawField._module || _rawField._isModule) // if raw or initialized
 		return Object.assign({}, fieldDefaults, {type: MODULE.of(_rawField).type})
+
 
 
 	// assign defaults

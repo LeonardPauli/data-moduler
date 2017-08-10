@@ -59,7 +59,7 @@ export default function TmpStorePlugin (defaults) {
 		// typeReducer,
 
 		actions: {
-			mutationWrapper: (context, fn)=> fn({...context, hello: 'from tmpstore'}),
+			mutationWrapper: (context, fn)=> ()=> fn({...context, hello: 'from tmpstore'}),
 			// fetcherWrapper: (context, fn)=> fn(context),
 		},
 

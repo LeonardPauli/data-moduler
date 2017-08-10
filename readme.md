@@ -1,4 +1,4 @@
-# Data-Moduler
+'# Data-Moduler
 
 Automatic generation of database models, rest endpoints and graphql api (all with validations, ease of authentisation and fully customizable) from simple specification \"module\" files
 
@@ -31,9 +31,13 @@ Created by Leonard Pauli, July 2017
 - [x] Nested modules
 - [x] Basic markdown plugin
 - [x] Relation type (normaliser + markdown)
-- [ ] Mutations/fetchers (normaliser + markdown + tmpstore
+- [ ] Mutations/getters(fetchers) (normaliser + markdown + tmpstore
 	(just store in memory store, mostly as base for other stores))
-- [ ] Actions/getters (normaliser + markdown)
+- [ ] ~~Actions/getters (normaliser + markdown)~~
+	idea was that mutation/fetchers would be isolated, and actions/getters
+	could use mutations/fetchers (similar to vuex). Keep it simple,
+	just use getters (pure get only, no mutations allowed)
+	and mutations ()
 - [ ] Basic GraphQL
 	(schema, graphiql, nested modules, primitive types, comments, actions/getters)
 - [ ] GraphQL relation types
@@ -56,16 +60,21 @@ Created by Leonard Pauli, July 2017
 ## Notes
 
 functionWrappers:
-	mutation: (context, fn)=> fn(context)
-	fetcher: (context, fn)=> fn(context)
+	mutation: (defaultContext, typeSpecificFunction)=> {
+		const typeSpecificContent = {...defaultContext, xxx:123}
+		return ()=> typeSpecificFunction(typeSpecificContent)
+		res.yyy = 321
+		return res
+	},
+	fetcher: etc
 
 
 mutations
-	mutationName1: context=> typeSpecificFunction
+	mutationName1: context=> functionContent
 	mutationName2:
-		default: context=> ()=> functionContent
-		namespace1: context=> typeSpecificFunction
-		namespace2: context=> typeSpecificFunction
+		default: defaultContext=> defaultFunctionContent
+		namespace1: typeSpecificContext=> typeSpecificFunctionContent
+		namespace2: typeSpecificContext=> typeSpecificFunctionContent
 		comment: '...'
 
 fetchers

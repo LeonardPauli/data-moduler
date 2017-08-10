@@ -1,13 +1,11 @@
+/* eslint no-console:0 */
+
 import baseModule, {moduler} from './just-markdown'
 import {log} from '../src/stringFromObject'
 
-// eslint-disable-next-line
+for (let i=0; i < 10; i++) console.log('\n')
 console.log('-----------------------------------------------------------------')
-// eslint-disable-next-line
-// console.dir(demo, {color:1, depth:7})
-// log(baseModule, 7)
-// eslint-disable-next-line
-console.log('-----------------------------------------------------------------')
+
 
 
 // Markdown (export API documentation using baseModule)
@@ -19,6 +17,11 @@ const store = new moduler.tmpstore.Store()
 baseModule.tmpstore.attach({store})
 // baseModule.mutations.create.tmpstore()
 // log(baseModule, 7)
-log(baseModule.modules.User.modules.Color)
+// log(baseModule.modules, 10)
+
+log(baseModule.modules.User.mutations.sayHay.tmpstore())
+
+
+
 console.log('-----------------------------------------------------------------')
-log(baseModule.modules.User.modules.Color.mutations.create.default())
+for (let i=0; i < 10; i++) console.log('\n')

@@ -150,3 +150,65 @@ moduler.parse({
 	modules: {Teacher, Student}
 })
 
+
+
+
+
+import Pack from './pack'
+
+// User
+// 	- name: String
+// 	- shortName: String
+// 		authorised: ...
+// 	authorised: ...
+// 	mutations:
+// 		- copyNameFromUser: Self
+// 			input:
+// 				useSelf // - self: Self
+// 				- otherUser: Self
+// 			- sql: ...
+// 			- graphql: ...
+
+
+const User = {
+	fields: {
+		name: STRING,
+		shortName: {
+			type: STRING,
+			authorised: ({user, forMutation})=> forMutation
+				? user.insider?.privileges.admin
+				: true
+		},
+	},
+	authorised: ({user, forMutation})=> forMutation // generally
+		? user.insider?.privileges.admin
+		: true
+	mutations: {
+		copyNameFromUser: {
+			input: ({User})=> OBJECT.of({ // like fields
+				SELF,	// special; provide it to the action separately
+				otherUser: User,
+			}),
+			type: SELF,
+			sql: ({models}, self)=> ({otherUser: {name}})=> {
+				self.sql.name = name
+				return self.sql.save()
+			},
+			graphql: ({sql}, self)=> ({otherUser})=> sql(otherUser),
+		}
+	},
+	getters: {
+		packs: {
+			input: SELF,
+			type: LIST.of(Pack), // type is return type
+			sql: ({models})=> ()=> models.Pack // param 2; input
+				.where('user.id is :id', {id: user.id})
+				.where('user.id is :id', {id: user.id})
+				.where('user.id is :id', {id: user.id}),
+			graphql: async ({sql})=> {
+				const packs = await sql()
+				return packs.map(x=> ...)
+			},
+		}
+	}
+}

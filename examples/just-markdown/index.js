@@ -10,7 +10,7 @@ export const moduler = new DataModuler({
 
 // Define the modules (User, Note)
 const { allowNull } = moduler.dataFlags
-const { STRING } = moduler.dataTypes
+const { STRING, BOOLEAN, INT, SELF } = moduler.dataTypes
 
 const Color= {
 	fields: {
@@ -18,7 +18,14 @@ const Color= {
 	},
 	mutations: {
 		create: {
-			default: context=> ()=> console.warn(
+			// User,
+			// BOOLEAN,
+			// type: User,
+			// type: INT,
+
+			// input: User,
+			// input: INT,
+			default: context=> console.warn(
 				'mutation not implemented /or/ implementation not supported in this platform', context),
 			tmpstore: context=> console.dir({mutation: context.hello, context}),
 		},
@@ -26,14 +33,25 @@ const Color= {
 }
 const User = {
 	modules: {
-		Color,
+		// Color,
 	},
 	fields: {
-		rang1: Color,
-		rang2: {type: Color},
+		lal: SELF,
 		name: STRING,
-		title: { STRING, allowNull,
-			comment: '*ie.* CEO, or Happiness Hero',
+		// rang1: Color,
+		// rang2: {type: Color},
+		// title: { STRING, allowNull,
+		// 	comment: '*ie.* CEO, or Happiness Hero',
+		// },
+	},
+	mutations: {
+		create: {
+			SELF,
+			input: SELF,
+		},
+		sayHay: {
+			default: (context)=> 'hellu',
+			tmpstore: ({hello})=> hello + ' !!!',
 		},
 	},
 }
@@ -83,7 +101,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {User, Note},
+	modules: {User,Note},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule
