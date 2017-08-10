@@ -9,7 +9,7 @@ export const moduler = new DataModuler({
 })
 
 // Define the modules (User, Note)
-const { allowNull } = moduler.dataFlags
+const { allowNull, isStatic } = moduler.dataFlags
 const { STRING, BOOLEAN, INT, SELF } = moduler.dataTypes
 
 const Color= {
@@ -44,14 +44,28 @@ const User = {
 		// 	comment: '*ie.* CEO, or Happiness Hero',
 		// },
 	},
-	mutations: {
-		create: {
-			SELF,
-			input: SELF,
+	getters: {
+		uppercaseName: { STRING,
+			tmpstore: ({self})=> self.name.toUpperCase(),
 		},
-		sayHay: {
-			default: (context)=> 'hellu',
-			tmpstore: ({hello})=> hello + ' !!!',
+		masterUserName: { SELF, isStatic,
+			default: props=> console.dir({MASTER: props}) || 'MASTER',
+		},
+	},
+	mutations: {
+		changeName: {
+			input: {name: STRING},
+			tmpstore: ({hello, self}, {name})=> `${hello}, ${self.name} -> ${name} !!!`,
+		},
+		create: { SELF, isStatic,
+			input: {
+				name: STRING,
+				password: STRING,
+			},
+			tmpstore: ({input: {name, password}})=> `${name} + ${password}`,
+		},
+		sendEmailToAll: { isStatic, // isStatic if SELF isn't necessary as input
+			default: ()=> 'sending email...',
 		},
 	},
 }

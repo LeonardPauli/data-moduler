@@ -94,7 +94,9 @@ export default class ModuleParser {
 		module.fields = fieldsNormaliser(module)
 
 		// actions, getters
-		Object.assign(module, actionsNormaliser(module))
+		const moduleActionsNormaliser = actionsNormaliser(module)
+		Object.assign(module, moduleActionsNormaliser('mutations'))
+		Object.assign(module, moduleActionsNormaliser('getters'))
 		
 		// set custom plugin type for module
 		plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>

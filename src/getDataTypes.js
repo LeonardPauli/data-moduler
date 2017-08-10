@@ -1,3 +1,5 @@
+import getFieldsNormaliser from './getFieldsNormaliser'
+
 // helpers
 const getListOf = plugins=> ({type: rawInnerType})=> module=> {
 	const innerType = typeof rawInnerType !== 'function' ? rawInnerType
@@ -36,6 +38,22 @@ const moduleTypeUnwrapper = _moduler=> module=> {
 	if (module._module) return {type: module._module} // get initialized from raw
 	throw new Error(`data-moduler.MODULE.of(${module.name}): rawModule not initialised`)
 	// return {type: module} // rawModule._module will point to initialised module
+}
+
+const objectTypeCreator = _moduler=> fields=> {
+	const fieldsNormaliser = getFieldsNormaliser(_moduler)
+	const obj = {
+		name: 'OBJECT-X',
+		fields: fieldsNormaliser({fields}),
+	}
+
+	// helpers
+	Object.defineProperty(obj, 'toString', {
+		enumerable: false,
+		value: moduleToString,
+	})
+
+	return {type: obj}
 }
 
 
@@ -82,7 +100,11 @@ const defaultDataTypes = {
 		// 	},
 		// },
 	},
-	OBJECT: {}, // JSON or JSONB, etc
+	OBJECT: { // JSON/JSONB/etc, or just nested fields; For validation/doc: OBJECT.of({field:type, ...})
+		statics: {
+			of: objectTypeCreator,
+		},
+	},
 }
 
 
