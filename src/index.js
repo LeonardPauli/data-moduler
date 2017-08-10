@@ -41,7 +41,7 @@ export default class ModuleParser {
 
 		// attach helpers
 		this.plugins.filter(p=> p.namespace && p.helpers).forEach(
-			({namespace, helpers})=> this[namespace] = helpers)
+			({namespace, helpers})=> this[namespace] = {...helpers})
 
 		// initialize defaults
 		this.moduleInitialiser = getModuleInitialiser(this)

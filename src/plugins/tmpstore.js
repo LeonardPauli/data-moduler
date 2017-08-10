@@ -1,11 +1,57 @@
 // namespace
 const namespace = 'tmpstore'
-
+let id = 0
 // initialiseModule
-const initialiseModule = _moduler=> module=> {
+const initialiseModule = moduler=> module=> {
 	module[namespace] = Object.assign({}, module[namespace])
 
+
+	if (!module.isEntity) return
+
+	const {isStatic, allowNull} = moduler.dataFlags
+	const {STRING} = moduler.dataTypes
+
 	// optionally setup default CRUD mutation/fetcher adapters
+
+	module.mutations.create = { isStatic,
+		input: {name: STRING},
+		[namespace]: ({store, module: {name}}, input)=> store.collections[name]
+			.createDocument({...input, id: id++}),
+	}
+
+	module.getters.load = {
+		[namespace]: ({store, module: {name}, self})=> store.collections[name]
+			.documents.find(d=> d.id == self.id),
+	}
+
+	module.getters.list = { isStatic,
+		input: {
+			q: { STRING, allowNull,
+				comment: 'Filter name',
+			},
+		},
+		[namespace]: ({store, module: {name}}, input)=> store.collections[name]
+			.documents.filter(d=> {
+				const keys = Object.keys(input)
+				if (!keys.length) return true
+				return keys.some(k=>
+					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
+				)
+			}),
+	}
+
+	module.mutations.update = {
+		input: {name: STRING},
+		[namespace]: ({module, self}, input)=>
+			Object.assign(module.getters.load[namespace](self)(), input),
+	}
+
+	module.mutations.delete = {
+		[namespace]: ({store, module, self})=> {
+			const doc = module.getters.load[namespace](self)()
+			return store.collections[module.name].removeDocument(doc)
+		},
+	}
 }
 
 
@@ -15,20 +61,29 @@ class Collection {
 	constructor (name) {
 		this.name = name
 	}
+	toString () { return this.name }
 	createDocument (doc) {
+		Object.defineProperty(doc, 'toString', {
+			enumerable: false,
+			value: ()=> doc.name,
+		})
 		this.documents.push(doc)
+		return doc
 	}
 	removeDocument (doc) {
 		this.documents = this.documents.filter(d=> d!==doc)
+		return doc
 	}
 }
 class Store {
 	collections = {}
 	createCollection (name) {
-		this.collections[name] = new Collection(name)
+		return this.collections[name] = new Collection(name)
 	}
 	removeCollection (name) {
+		const ret = this.collections[name]
 		delete this.collections[name]
+		return ret
 	}
 }
 
@@ -50,6 +105,11 @@ const attach = defaults=> (module, options={})=> {
 }
 
 
+const actionsWrapper = (context, fn)=> fn({
+	...context,
+	store: context.moduler[namespace].store,
+}, context.input)
+
 export default function TmpStorePlugin (defaults) {
 	return {
 		namespace,
@@ -59,13 +119,14 @@ export default function TmpStorePlugin (defaults) {
 		// typeReducer,
 
 		actions: {
-			mutationsWrapper: (context, fn)=> ()=> fn({...context, hello: 'from tmpstore'}, context.input),
-			// fetcherWrapper: (context, fn)=> fn(context),
+			mutationsWrapper: actionsWrapper,
+			gettersWrapper: actionsWrapper,
 		},
 
 		helpers: {
 			attach: attach(defaults),
 			Store,
+			store: null, // CRUD actions are referencing moduler[namespace].store, set it manually
 		},
 		moduleHelpers: {
 			attach: module=> options=> attach(defaults)(module, options),

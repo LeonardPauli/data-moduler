@@ -18,8 +18,12 @@ const getModuleInitialiser = moduler=> rawModule=> {
 		? !!rawModule.fields
 		: rawModule.isEntity
 
+	// setup defaults
+	module.mutations = module.mutations || {}
+	module.getters = module.getters || {}
+
 	// plugins
-	plugins.map(p=> p.initialiseModule).filter(v=> v).forEach(f=> f(module))
+	plugins.map(p=> p.initialiseModule).filter(v=> v).forEach(f=> f(moduler)(module))
 
 	// helpers
 	Object.defineProperty(module, 'toString', {

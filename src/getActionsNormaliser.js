@@ -44,27 +44,47 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 	// (ie. veux takes state/graphql takes root arg), but when called from
 	// DataModuler, it should be same format. Accomplished by wrapping actions per type.
 	const wrappers = {
-		default: (context, fn)=> ()=> fn(context, context.input),
+		default: (context, fn)=> fn(context, context.input || {}),
 	}
 	plugins.map(p=> [p.actions && p.actions[actionCategoryName+'Wrapper'], p.namespace])
 		.filter(([v, _])=> v).forEach(([wrapper, namespace])=> wrappers[namespace] = wrapper)
 
 
 	// default context, first sent to wrapper that then can decide what to send to action
-	const context = {theContext: 'contexxx'}
+	const context = {moduler, module, actionCategoryName}
 
 
 	// repackage rawActions to actions
 	const actions = module[actionCategoryName] = {}
 	Object.keys(rawActions).forEach(actionName=> {
 		const rawAction = rawActions[actionName]
-		const action = actions[actionName] = {}
+		const action = actions[actionName] = {
+			rawActions: {},
+			isStatic: false,
+			type: null,
+			input: null,
+		}
+
+
+		const wrapActionField = ({namespace, fn})=> {
+			const wrapper = wrappers[namespace]
+			if (!wrapper) return console.warn(
+				`data-moduler; actionNormaliser; ${module.name}.actions.${actionName}; `
+					+`'${namespace}' wrapper couldn't be find`)
+
+			// wrap
+			action.rawActions[namespace] = fn
+			action[namespace] = action.isStatic
+				// TODO: put in a validation layer in-between input and wrapper?
+				? 			 (input={})=> wrapper({...context, actionName, input 		  }, fn)
+				: self=> (input={})=> wrapper({...context, actionName, input, self}, fn)
+		}
+
 
 		// ie. actions: { doThing: context=> ... }
 		// usefull if only one platform is used
 		if (typeof rawAction === 'function') {
-			action.default = wrappers.default(context, rawAction)
-			// TODO; maybe add void output/input type?
+			wrapActionField({ namespace: 'default', fn: rawAction })
 			return
 		}
 
@@ -76,10 +96,6 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 
 		// parse action object
 		// { type: ..., input: ..., pluginNamespace: (pluginsWrapperContext)=> ..., ... }
-		action.rawActions = {}
-		action.isStatic = false
-		action.type = null
-		action.input = null
 		const actionFields = []
 		Object.keys(rawAction).forEach(key=> {
 			const field = rawAction[key]
@@ -94,8 +110,15 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 			if (rawModule) return action.type = fieldNormaliser({type: rawModule})
 
 			// consume type
+			// ie. input: {name: {STRING, allowNull}}, ...
 			const isTypeKey = key == 'type' || key == 'input'
-			if (isTypeKey) return action[key] = fieldNormaliser({type: field})
+			if (isTypeKey) {
+				const fields = {}
+				Object.keys(field).forEach(k=> {
+					fields[k] = fieldNormaliser(field[k])
+				})
+				return action[key] = fields
+			}
 
 			// consume isStatic
 			if (key=='isStatic')
@@ -106,24 +129,11 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 			// TODO
 
 			// otherwise, assume it's supposed to be an action function
-			actionFields.push(key)
+			actionFields.push({ namespace: key, fn: field })
 		})
 
 		// wrap actionFields
-		actionFields.forEach(namespace=> {
-			const field = rawAction[namespace]
-			const wrapper = wrappers[namespace]
-			if (!wrapper) return console.warn(
-				`data-moduler; actionNormaliser; ${module.name}.actions.${actionName}; `
-					+`'${namespace}' wrapper couldn't be find`)
-
-			// wrap
-			action.rawActions[namespace] = field
-			action[namespace] = action.isStatic
-				// TODO: put in a validation layer in-between input and wrapper?
-				? 			 input=> wrapper({...context, input 		 }, field)
-				: self=> input=> wrapper({...context, input, self}, field)
-		})
+		actionFields.forEach(wrapActionField)
 	})
 }
 

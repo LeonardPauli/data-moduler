@@ -36,7 +36,7 @@ const User = {
 		// Color,
 	},
 	fields: {
-		lal: SELF,
+		// lal: SELF,
 		name: STRING,
 		// rang1: Color,
 		// rang2: {type: Color},
@@ -44,30 +44,30 @@ const User = {
 		// 	comment: '*ie.* CEO, or Happiness Hero',
 		// },
 	},
-	getters: {
-		uppercaseName: { STRING,
-			tmpstore: ({self})=> self.name.toUpperCase(),
-		},
-		masterUserName: { SELF, isStatic,
-			default: props=> console.dir({MASTER: props}) || 'MASTER',
-		},
-	},
-	mutations: {
-		changeName: {
-			input: {name: STRING},
-			tmpstore: ({hello, self}, {name})=> `${hello}, ${self.name} -> ${name} !!!`,
-		},
-		create: { SELF, isStatic,
-			input: {
-				name: STRING,
-				password: STRING,
-			},
-			tmpstore: ({input: {name, password}})=> `${name} + ${password}`,
-		},
-		sendEmailToAll: { isStatic, // isStatic if SELF isn't necessary as input
-			default: ()=> 'sending email...',
-		},
-	},
+	// getters: {
+	// 	uppercaseName: { STRING,
+	// 		tmpstore: ({self})=> self.name.toUpperCase(),
+	// 	},
+	// 	masterUserName: { SELF, isStatic,
+	// 		default: props=> console.dir({MASTER: props}) || 'MASTER',
+	// 	},
+	// },
+	// mutations: {
+	// 	changeName: {
+	// 		input: {name: STRING},
+	// 		tmpstore: ({hello, self}, {name})=> `${hello}, ${self.name} -> ${name} !!!`,
+	// 	},
+	// 	create: { SELF, isStatic,
+	// 		input: {
+	// 			name: STRING,
+	// 			password: STRING,
+	// 		},
+	// 		tmpstore: ({input: {name, password}})=> `${name} + ${password}`,
+	// 	},
+	// 	sendEmailToAll: { isStatic, // isStatic if SELF isn't necessary as input
+	// 		default: ()=> 'sending email...',
+	// 	},
+	// },
 }
 
 // const actionInputNormaliser =
@@ -115,7 +115,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {User,Note},
+	modules: {User},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule
