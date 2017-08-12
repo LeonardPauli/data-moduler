@@ -66,6 +66,7 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 		}
 
 
+		// wrapActionField function
 		const wrapActionField = ({namespace, fn})=> {
 			const wrapper = wrappers[namespace]
 			if (!wrapper) return console.warn(
@@ -112,10 +113,15 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 			const rawModule = rawModules[key]
 			if (rawModule) return action.type = fieldNormaliser({type: rawModule})
 
-			// consume type
+			// consume return type
+			if (key == 'type') {
+				action.type = fieldNormaliser({type: field})
+				return
+			}
+
+			// consume input type
 			// ie. input: {name: {STRING, allowNull}}, ...
-			const isTypeKey = key == 'type' || key == 'input'
-			if (isTypeKey) {
+			if (key == 'input') {
 				const fields = {}
 				Object.keys(field).forEach(k=> {
 					fields[k] = fieldNormaliser(field[k])

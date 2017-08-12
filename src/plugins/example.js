@@ -51,6 +51,12 @@ const typeReducer = module=> {
 }
 
 
+// afterTypeSetup
+const afterTypeSetup = module=> {
+	module[namespace].myCustomField = typeof module.type[namespace]
+}
+
+
 // exported helpers
 const writeFile = defaults=> (module, options={})=> {
 	const opt = Object.assign({
@@ -69,6 +75,7 @@ export default function Example (defaults) {
 		initialiseModule,
 		dataTypes,
 		typeReducer,
+		afterTypeSetup,
 
 		actions: {
 			mutationWrapper: (context, fn)=> fn(context),

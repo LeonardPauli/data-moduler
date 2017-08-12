@@ -37,7 +37,21 @@ const initialiseModule = _moduler=> module=> {
 // }
 
 
-// helper
+// helpers
+const mdIndent = '  '
+
+const limitStrLength = (str, n=100)=>
+	str.length>n ? str.substr(0, n-3)+'...' : str
+
+const mdLink = (text, link)=> link
+	?	`[${text}](${link})`
+	: text
+
+const mdTypeLink = field=> mdLink(
+	field.type.name,
+	field.type.documentationURL)+(field.allowNull? '?': ''
+)
+
 const tableFromRows = rows=> {
 	const headerRowsCount = 1
 
@@ -63,20 +77,52 @@ const tableFromRows = rows=> {
 }
 
 
-// limitStrLength
-const limitStrLength = (str, n=100)=>
-	str.length>n ? str.substr(0, n-3)+'...' : str
+// addActionsGroup (md section)
+const getAddActionsGroup = doc=> (title, actions)=> {
+	const actionNames = Object.keys(actions)
+	if (!actionNames.length) return
 
-const mdLink = (text, link)=> link
-	?	`[${text}](${link})`
-	: text
+	doc.push(`###### ${title}`)
+	doc.push('')
 
-const mdTypeLink = field=> mdLink(
-	field.type.name,
-	field.type.documentationURL)+(field.allowNull? '?': ''
-)
+	actionNames.forEach(actionName=> {
+		const action = actions[actionName]
+		const {type, isStatic, comment, input, returnTypeDescription, rawActions} = action
+		const returnType = type
+			? `: ${mdTypeLink(type)}`
+			: ''
+		const mdStatic = !isStatic?'': ' *static*'
 
-const mdIndent = '  '
+		const inputNames = input? Object.keys(input): []
+		
+		doc.push(`- __${actionName}__${returnType}${mdStatic}`) // title
+		if (comment) doc.push(`${mdIndent}> ${comment}`) // general comment
+		if (comment && (inputNames.length || returnTypeDescription))
+			doc.push(`${mdIndent}>`) // break
+
+		// input fields
+		inputNames.forEach(name=> doc.push(`${mdIndent}> **${name}:** ${mdTypeLink(input[name])}`
+			+ (input[name].comment?' '+input[name].comment:''))) // comment
+
+		if (returnTypeDescription) // returns comment
+			doc.push(`${mdIndent}> **returns:** ${returnTypeDescription}`)
+
+		// plugins
+		const pluginNames = Object.keys(rawActions)
+		const pluginsSection = pluginNames
+			.map(name=> [name, rawActions[name].comment]).filter(([_, t])=> t)
+			.map(([name, comment])=> `${mdIndent}${name}: ${comment}`)
+			.join('\n')
+
+		if (pluginsSection) {
+			doc.push('')
+			doc.push(pluginsSection)
+		}
+
+		// end break
+		doc.push('')
+	})
+}
 
 
 // getModuleMDTypeToMDString
@@ -102,65 +148,21 @@ const getModuleMDTypeToMDString = type=> ({
 			addBreak(1); doc.push(sectionAfterDescription)
 		}
 
-
+		// actions
 		if (actions) {
 			addBreak(1)
 			doc.push('#### Actions')
 			addBreak(1)
 
-			const addActionsGroup = (title, actions)=> {
-				const actionNames = Object.keys(actions)
-				if (!actionNames.length) return
-
-				doc.push(`###### ${title}`)
-				addBreak(1)
-
-				actionNames.forEach(actionName=> {
-					const action = actions[actionName]
-					const {type, isStatic, comment, input, returnTypeDescription, rawActions} = action
-					const returnType = type
-						? `: ${mdTypeLink(type)}`
-						: ''
-					const mdStatic = !isStatic?'': ' *static*'
-
-					const inputNames = input? Object.keys(input): []
-					
-					doc.push(`- __${actionName}__${returnType}${mdStatic}`) // title
-					if (comment) doc.push(`${mdIndent}> ${comment}`) // general comment
-					if (comment && (inputNames.length || returnTypeDescription))
-						doc.push(`${mdIndent}>`) // break
-
-					// input fields
-					inputNames.forEach(name=> doc.push(`${mdIndent}> **${name}:** ${mdTypeLink(input[name])}`
-						+ (input[name].comment?' '+input[name].comment:''))) // comment
-
-					if (returnTypeDescription) // returns comment
-						doc.push(`${mdIndent}> **returns:** ${returnTypeDescription}`)
-
-					// plugins
-					const pluginNames = Object.keys(rawActions)
-					const pluginsSection = pluginNames
-						.map(name=> [name, rawActions[name].comment]).filter(([_, t])=> t)
-						.map(([name, comment])=> `${mdIndent}${name}: ${comment}`)
-						.join('\n')
-
-					if (pluginsSection) {
-						doc.push('')
-						doc.push(pluginsSection)
-					}
-
-					// end break
-					doc.push('')
-				})
-			}
-
-			addActionsGroup('Mutations', actions.mutations)
-			addActionsGroup('Getters', actions.getters)
+			const addActionsGroup = getAddActionsGroup(doc)
+			addActionsGroup('Mutations', actions.mutations) // Mutations
+			addActionsGroup('Getters', actions.getters) // Getters
 			// doc.pop() // remove last break
 		}
 
 		return doc.join('\n')
 	}
+
 
 	doc.push('# '+title) // title
 	if (description) doc.push(description) // description
@@ -288,7 +290,7 @@ const writeFile = defaults=> (module, options={})=> {
 }
 
 
-export default function Markdown (defaults) {
+export default function MarkdownPlugin (defaults) {
 	return {
 		namespace,
 

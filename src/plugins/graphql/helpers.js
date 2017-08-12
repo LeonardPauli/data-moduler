@@ -1,8 +1,14 @@
 import {
 	GraphQLObjectType,
+	GraphQLSchema,
+	GraphQLString,
 } from 'graphql'
 
-export const getGraphqlQuery = modules=> {
+export const getSchema = defaults=> (module, options={})=> {
+	const opt = Object.assign({
+		raw: false,
+	}, defaults, options)
+	const {raw} = opt
 
 	// getEndpoints
 	const getEndpoints = (modules, isActions)=> {
@@ -14,8 +20,16 @@ export const getGraphqlQuery = modules=> {
 			entity.name = module.name+(isActions?'Actions':'Module')
 			entity.description = module.comment
 			
+			const actionCategoryName = isActions?'mutations':'getters'
 			entity.fields = {}
-			Object.assign(entity.fields, module.graphql[isActions?'actions':'getters'])
+			Object.assign(entity.fields, module.graphql[actionCategoryName])
+
+
+			if (Object.keys(entity.fields).length==0) {
+				entity.fields.empty = {type: GraphQLString, args: {}, resolve: ()=> true}
+				console.warn('dataModuler; graphql plugin; '
+					+ `no ${actionCategoryName} defined for ${moduleName}`)
+			}
 			
 			// var s = GraphQLObjectType
 			// debugger;
@@ -28,15 +42,26 @@ export const getGraphqlQuery = modules=> {
 	}
 
 	const endpoints = {}
-	endpoints.query = getEndpoints(modules, false)
-	endpoints.mutation = getEndpoints(modules, true)
+	endpoints.query = getEndpoints(module.modules, false)
+	endpoints.mutation = getEndpoints(module.modules, true)
 
 	// console.dir({graphqlhelpers: endpoints.query}, {colors:1, depth:9})
 
 	// process.exit()
-	return endpoints
-}
+	if (raw) return endpoints
 
+	return new GraphQLSchema({
+		name: module.title,
+		query: new GraphQLObjectType({
+			name: 'RootQuery',
+			fields: endpoints.query,
+		}),
+		mutation: new GraphQLObjectType({
+			name: 'RootMutationQuery',
+			fields: endpoints.mutation,
+		}),
+	})
+}
 
 
 // moduleQueryTypeGenerator

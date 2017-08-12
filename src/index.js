@@ -102,8 +102,8 @@ export default class ModuleParser {
 		plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>
 			module.type[namespace] = typeReducer(module))
 		
-		// // plugins
-		// plugins.map(m=> m.gettersGenerator).filter(v=> v).forEach(f=> f(module))
+		// plugins
+		plugins.map(m=> m.afterTypeSetup).filter(v=> v).forEach(f=> f(module))
 		// plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(module))
 
 

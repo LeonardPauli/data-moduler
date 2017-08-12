@@ -9,7 +9,7 @@ const initialiseModule = moduler=> module=> {
 	if (!module.isEntity) return
 
 	const {isStatic, allowNull} = moduler.dataFlags
-	const {STRING} = moduler.dataTypes
+	const {STRING,MODULE} = moduler.dataTypes
 
 	// optionally setup default CRUD mutation/fetcher adapters
 
@@ -17,47 +17,48 @@ const initialiseModule = moduler=> module=> {
 			.createDocument({...input, id: id++})
 	fn.comment = 'Note from a plugin'
 
+
 	module.mutations.create = { isStatic,
-		type: STRING,
+		type: MODULE.of(module),
 		returnTypeDescription: 'If ok or not',
 		input: {name: STRING},
 		[namespace]: fn,
 	}
 
-	module.getters.load = {
-		[namespace]: ({store, module: {name}, self})=> store.collections[name]
-			.documents.find(d=> d.id == self.id),
-	}
+	// module.getters.load = {
+	// 	[namespace]: ({store, module: {name}, self})=> store.collections[name]
+	// 		.documents.find(d=> d.id == self.id),
+	// }
 
-	module.getters.list = { isStatic,
-		comment: 'Has filter ability',
-		input: {
-			q: { STRING, allowNull,
-				comment: 'Filter name',
-			},
-		},
-		[namespace]: ({store, module: {name}}, input)=> store.collections[name]
-			.documents.filter(d=> {
-				const keys = Object.keys(input)
-				if (!keys.length) return true
-				return keys.some(k=>
-					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
-				)
-			}),
-	}
+	// module.getters.list = { isStatic,
+	// 	comment: 'Has filter ability',
+	// 	input: {
+	// 		q: { STRING, allowNull,
+	// 			comment: 'Filter name',
+	// 		},
+	// 	},
+	// 	[namespace]: ({store, module: {name}}, input)=> store.collections[name]
+	// 		.documents.filter(d=> {
+	// 			const keys = Object.keys(input)
+	// 			if (!keys.length) return true
+	// 			return keys.some(k=>
+	// 				d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
+	// 			)
+	// 		}),
+	// }
 
-	module.mutations.update = {
-		input: {name: STRING},
-		[namespace]: ({module, self}, input)=>
-			Object.assign(module.getters.load[namespace](self)(), input),
-	}
+	// module.mutations.update = {
+	// 	input: {name: STRING},
+	// 	[namespace]: ({module, self}, input)=>
+	// 		Object.assign(module.getters.load[namespace](self)(), input),
+	// }
 
-	module.mutations.delete = {
-		[namespace]: ({store, module, self})=> {
-			const doc = module.getters.load[namespace](self)()
-			return store.collections[module.name].removeDocument(doc)
-		},
-	}
+	// module.mutations.delete = {
+	// 	[namespace]: ({store, module, self})=> {
+	// 		const doc = module.getters.load[namespace](self)()
+	// 		return store.collections[module.name].removeDocument(doc)
+	// 	},
+	// }
 }
 
 

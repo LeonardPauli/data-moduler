@@ -15,7 +15,9 @@ const stringFromObject = (obj, depth=1, options={}, prefix='')=> {
 	// render object name
 	const getObjectName = obj=> {
 		if (obj.toString === [].toString) return 'Array'
-		const objStr = obj+''
+		const objStr = (obj.toString && obj.toString())
+			|| (typeof obj == 'object' && typeof obj.name == 'string' && obj.name)
+			|| typeof obj
 		const useObjStr = objStr!=='[object Object]'
 		return useObjStr? objStr.replace(/\n(.| |\n)*$/, '...'): null
 	}

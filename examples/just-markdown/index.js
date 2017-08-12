@@ -3,9 +3,13 @@
 
 // Setup the moduler (DataModuler) with plugins
 import DataModuler, {plugins} from '../../src'
-const {markdown, tmpstore} = plugins
+const {markdown, tmpstore, graphql} = plugins
 export const moduler = new DataModuler({
-	plugins: [tmpstore(), markdown()],
+	plugins: [
+		tmpstore(),
+		graphql(),
+		// markdown(),
+	],
 })
 
 // Define the modules (User, Note)
@@ -79,7 +83,7 @@ const Note = {
 	comment: '*Tips:* Write one note every day in the morning',
 	fields: {
 		text: STRING,
-		user: User,
+		//user: User,
 	},
 	// mutations: {
 	// 	set: {
@@ -116,7 +120,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {User, Note},
+	modules: {Note},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule
