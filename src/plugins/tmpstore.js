@@ -9,7 +9,7 @@ const initialiseModule = moduler=> module=> {
 	if (!module.isEntity) return
 
 	const {isStatic, allowNull} = moduler.dataFlags
-	const {STRING,MODULE} = moduler.dataTypes
+	const {STRING, MODULE} = moduler.dataTypes
 
 	// optionally setup default CRUD mutation/fetcher adapters
 
@@ -17,11 +17,11 @@ const initialiseModule = moduler=> module=> {
 			.createDocument({...input, id: id++})
 	fn.comment = 'Note from a plugin'
 
-
+	console.dir(module)
 	module.mutations.create = { isStatic,
 		type: MODULE.of(module),
 		returnTypeDescription: 'If ok or not',
-		input: {name: STRING},
+		input: module.fields,
 		[namespace]: fn,
 	}
 

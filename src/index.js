@@ -90,7 +90,6 @@ export default class ModuleParser {
 			module.modules = this.parseMany(module.modules, {alreadyInitialized: true})
 
 		// fields
-		module.type = Object.assign({}, module.type)
 		module.fields = fieldsNormaliser(module)
 
 		// actions, getters

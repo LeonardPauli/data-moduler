@@ -43,7 +43,7 @@ const User = {
 	fields: {
 		// lal: SELF,
 		name: STRING,
-		rang1: Color,
+		// rang1: Color,
 		// rang2: {type: Color},
 		title: { STRING, allowNull,
 			comment: '*ie.* CEO, or Happiness Hero',

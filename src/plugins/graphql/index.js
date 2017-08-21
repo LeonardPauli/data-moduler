@@ -53,6 +53,10 @@ const typeReducer = module=> {
 		newField.type = newField.type || field.type[namespace]
 		newField.resolve = newField.resolve || field.type.resolve || (data=> data[fieldName])
 	})
+
+	// TODO: add non-static getters
+	// TODO: add submodules (no, that's one for module type)
+
 	type.fields = rawFields // or ()=> rawFields
 
 	return new GraphQLObjectType(type)
@@ -71,7 +75,10 @@ const actionsFixer = ({module, actions})=> {
 		// add return type
 		// console.dir({action, type: action.type.type.type.type}, {depth:3, colors:1})
 		// TODO; that's way to many 'type'... RIGHT, it's because of that MODULE.of code..
-		ac.type = (action.type && action.type.type.type.type[namespace]) || GraphQLBoolean // needs a type
+		ac.type = (action.type && action.type // the field
+				// ie. action.type: STRING || {STRING, allowNull} || {type: STRING, allowNull: true}
+			.type[namespace] // action.type.type (ie. not .allowNull), then .graphql to get the actual type
+		) || GraphQLBoolean // needs a type
 
 		// add arguments
 		ac.args = {}

@@ -104,7 +104,6 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 			// consume comment
 			if (key=='comment' || key=='returnTypeDescription')
 				return action[key] = field
-			
 			// consume datatype type ie. {STRING, ...} vs {type: STRING, ...}
 			const dataType = dataTypes[key]
 			if (dataType) return action.type = fieldNormaliser({type: dataType})
@@ -115,7 +114,7 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 
 			// consume return type
 			if (key == 'type') {
-				action.type = fieldNormaliser({type: field})
+				action.type = fieldNormaliser(field)
 				return
 			}
 
@@ -150,9 +149,6 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 
 // export
 export default getActionsNormaliser
-
-
-
 
 
 
@@ -247,7 +243,8 @@ export default getActionsNormaliser
 
 
 // singleActionsNormaliser
-// const getSingleActionsNormaliser = actionNormaliser=> ({defaults, custom, preNormaliseAction})=> {
+// const getSingleActionsNormaliser = actionNormaliser=>
+// 	({defaults, custom, preNormaliseAction})=> {
 // 	const actions = Object.assign({}, custom)
 
 // 	// extend or remove default actions

@@ -18,9 +18,9 @@ import baseModule, {moduler} from './just-markdown'
 // 	includedPluginDescriptions: moduler.plugins,
 // })
 
-// const store = new moduler.tmpstore.Store()
-// moduler.tmpstore.store = store // for CRUD actions
-// baseModule.tmpstore.attach({store})
+const store = new moduler.tmpstore.Store()
+moduler.tmpstore.store = store // for CRUD actions
+baseModule.tmpstore.attach({store})
 // baseModule.mutations.create.tmpstore()
 // log(baseModule, 7)
 // log(baseModule.modules, 10)

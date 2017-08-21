@@ -34,8 +34,11 @@ const moduleTypeUnwrapper = _moduler=> module=> {
 	// 	return type
 	// }
 
-	if (module._isModule) return {type: module} // if already initialised
-	if (module._module) return {type: module._module} // get initialized from raw
+	const typeWrappedType = module=> ({type: module.type})
+		// if ._isModule is detected later on, it will unwrap
+
+	if (module._isModule) return typeWrappedType(module) // if already initialised
+	if (module._module) return typeWrappedType(module._module) // get initialized from raw
 	throw new Error(`data-moduler.MODULE.of(${module.name}): rawModule not initialised`)
 	// return {type: module} // rawModule._module will point to initialised module
 }

@@ -9,6 +9,7 @@ const getModuleInitialiser = moduler=> rawModule=> {
 	// create initialized module
 	const module = Object.assign({}, rawModule)
 	module._isModule = true
+	module.type = Object.assign({}, rawModule.type)
 
 	// setup back-reference for references
 	rawModule._module = module
