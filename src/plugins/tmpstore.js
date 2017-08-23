@@ -8,7 +8,7 @@ const initialiseModule = moduler=> module=> {
 
 	if (!module.isEntity) return
 
-	const {isStatic, allowNull} = moduler.dataFlags
+	const {isStatic, allowNull, onlyNew} = moduler.dataFlags
 	const {STRING, MODULE} = moduler.dataTypes
 
 	// optionally setup default CRUD mutation/fetcher adapters
@@ -21,7 +21,7 @@ const initialiseModule = moduler=> module=> {
 		type: MODULE.of(module),
 		returnTypeDescription: 'If ok or not',
 		input: ()=> ({
-			constructor: MODULE.of(module),
+			item: {...MODULE.of(module), onlyNew},
 		}),
 		[namespace]: fn,
 	}

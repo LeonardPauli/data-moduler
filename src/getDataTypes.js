@@ -62,6 +62,7 @@ const objectTypeCreator = _moduler=> fields=> {
 
 // defaultDataTypes
 const defaultDataTypes = {
+	ID: 			{ },
 	STRING: 	{ },
 	BOOLEAN: 	{ },
 	DATE: 		{ },

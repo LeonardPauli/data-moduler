@@ -7,6 +7,7 @@ import {
 	GraphQLFloat,
 	GraphQLBoolean,
 	GraphQLString,
+	GraphQLID,
 
 	GraphQLList,
 	// GraphQLNonNull,
@@ -28,6 +29,7 @@ const initialiseModule = _moduler=> module=> {
 
 // dataTypes
 const dataTypes = {
+	ID: 			{ type: GraphQLID },
 	STRING: 	{ type: GraphQLString },
 	BOOLEAN: 	{ type: GraphQLBoolean },
 	DATE: 		{ type: GraphQLString },
@@ -48,7 +50,7 @@ const typeReducer = module=> {
 	type.name = module.name
 	type.description = module.description
 
-	input.name = type.name+'Input'
+	input.name = module.name+'Input'
 	input.description = type.description
 	
 	const getFields = (isInput, rawFields={})=> ()=> {
@@ -57,7 +59,8 @@ const typeReducer = module=> {
 			const newField = rawFields[fieldName] = rawFields[fieldName] || {}
 
 			newField.type = newField.type || field.type[namespace]
-			if (isInput && newField.type.input) newField.type = newField.type.input
+			if (isInput && newField.type.getReferenceInputType)
+				newField.type = newField.type.getReferenceInputType({onlyNew: false, onlyId: false})
 
 			if (!isInput) newField.resolve = newField.resolve
 				|| field.type.resolve
@@ -74,7 +77,49 @@ const typeReducer = module=> {
 	input.fields = getFields(true, input.fields)
 
 	const objectType = new GraphQLObjectType(type)
-	objectType.input = new GraphQLInputObjectType(input)
+	const inputType = new GraphQLInputObjectType(input)
+	const idInputType = GraphQLID
+	const unionInput = new GraphQLInputObjectType({
+		name: module.name+'Reference',
+		description: 'Either pass on a reference to an existing'
+			+' or create a new by passing its data',
+		fields: {
+			id: {type: idInputType},
+			create: {type: inputType},
+		},
+	})
+
+	// unions not yet supported as input type
+	// const inputReferenceType = new GraphQLUnionType({
+	// 	name: type.name+'Reference',
+	// 	description: 'Either pass on a reference to an existing or create a new by passing its data',
+	// 	types: [
+	// 		GraphQLString, // id
+	// 		inputType,
+	// 	],
+	// 	resolveType (value) {
+	// 		return typeof value==='string'? GraphQLString: inputType
+	// 	},
+	// })
+
+	// ie. objectType.getReferenceInputType({onlyId: true}) -> objectType._idInput
+	const getGetReferenceInputType = objectType=> ({ onlyId, onlyNew }={})=> {
+		const inputType = objectType._input
+		const idType = objectType._idInput
+		const unionType = objectType._unionInput
+
+		if (onlyId && onlyNew) throw new Error(`dataModuler-${namespace}: `
+			+'getReferenceType({onlyId, onlyNew}), both can\'t be false')
+
+		if (onlyId) return idType
+		if (onlyNew) return inputType
+		return unionType // else, if allowId and allowNew
+	}
+
+	objectType._input = inputType
+	objectType._idInput = idInputType
+	objectType._unionInput = unionInput
+	objectType.getReferenceInputType = getGetReferenceInputType(objectType)
 
 	return objectType
 }
@@ -100,8 +145,12 @@ const actionsFixer = ({module, actions})=> {
 		// add arguments
 		ac.args = {}
 		if (action.input) Object.keys(action.input).forEach(k=> {
-			const ownType = action.input[k].type[namespace]
-			ac.args[k] = {type: ownType.input || ownType}
+			const field = action.input[k]
+			const ownType = field.type[namespace]
+			const {onlyId, onlyNew} = field
+			const inputType = ownType.getReferenceInputType
+				&& ownType.getReferenceInputType({onlyId, onlyNew})
+			ac.args[k] = {type: inputType || ownType}
 		})
 
 		// eslint-disable-next-line
