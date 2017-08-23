@@ -35,6 +35,8 @@ const Color= {
 		// },
 	},
 }
+
+const Note = {}
 const User = {
 	comment: 'Everyone accessing the system are users, even bots',
 	modules: {
@@ -43,6 +45,7 @@ const User = {
 	fields: {
 		// lal: SELF,
 		name: STRING,
+		thing: Note,
 		// rang1: Color,
 		// rang2: {type: Color},
 		title: { STRING, allowNull,
@@ -79,13 +82,12 @@ const User = {
 // 	({action, args, root: {req: {user}, res}, module})=>
 // 		({user, module})
 
-const Note = {}
 Object.assign(Note, {
 	comment: '*Tips:* Write one note every day in the morning',
 	fields: {
 		text: STRING,
-		hello: Note,
-		user: {User, onlyId},
+		hello: {Note, allowNull},
+		// user: {User, onlyId},
 	},
 	// mutations: {
 	// 	set: {
@@ -122,7 +124,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {Note, User},
+	modules: {Note},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule

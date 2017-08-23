@@ -1,10 +1,15 @@
 const dataFlags = {
-	allowNull: true, // used in module field type definition
+	allowNull: true, // used in module field type definition, both for type and action input
 	unique: true, // used in module field type definition
 
-	isStatic: true, // used for action
-	onlyId: true,  // used for action module input field
-	onlyNew: true, // used for action module input field
+	isStatic: true, // skipps adding SELF as input; action.isStatic = true
+
+	// defines reference kind when used as input
+	// action.input[field] = {Module, onlyNew}
+	// or Module.fields[field] = {Module, onlyId}
+	// default is allow both
+	onlyId: true,
+	onlyNew: true,
 }
 
 const getDataFlags = ()=> dataFlags

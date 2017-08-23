@@ -10,7 +10,7 @@ import {
 	GraphQLID,
 
 	GraphQLList,
-	// GraphQLNonNull,
+	GraphQLNonNull,
 } from 'graphql'
 
 
@@ -64,10 +64,12 @@ const typeReducer = module=> {
 				newField.type = newField.type.getReferenceInputType({onlyId, onlyNew})
 			}
 
+			if (!field.allowNull) newField.type = new GraphQLNonNull(newField.type)
+			// if (isInput) newField.defaultValue = ... // if value is null (allowNull req.)
+
 			if (!isInput) newField.resolve = newField.resolve
 				|| field.type.resolve
 				|| (data=> data[fieldName])
-			// if (isInput) newField.defaultValue = ...
 		})
 		return rawFields
 	}
@@ -79,7 +81,7 @@ const typeReducer = module=> {
 	input.fields = getFields(true, input.fields)
 
 	const objectType = new GraphQLObjectType(type)
-	const inputType = new GraphQLInputObjectType(input)
+	const inputType = new GraphQLNonNull(new GraphQLInputObjectType(input))
 	const idInputType = GraphQLID
 	const unionInput = new GraphQLInputObjectType({
 		name: module.name+'Reference',
@@ -156,7 +158,7 @@ const actionsFixer = ({module, actions})=> {
 		})
 
 		// eslint-disable-next-line
-		ac.resolve = (root, args, req, {rootValue})=> action.resolve({
+		ac.resolve = (root, args, req, {rootValue})=> action[namespace]({
 			action: actionName, args, root, module, req, rootValue,
 		})
 	})
@@ -223,8 +225,8 @@ export default function GraphQLPlugin (defaults) {
 		afterTypeSetup,
 
 		actions: {
-			mutationWrapper: (context, fn)=> fn(context),
-			fetcherWrapper: (context, fn)=> fn(context),
+			mutationsWrapper: (context, fn)=> fn(context),
+			gettersWrapper: (context, fn)=> fn(context),
 		},
 
 		helpers,

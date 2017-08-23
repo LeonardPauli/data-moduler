@@ -77,8 +77,8 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 			action.rawActions[namespace] = fn
 			action[namespace] = action.isStatic
 				// TODO: put in a validation layer in-between input and wrapper?
-				? 			 (input={})=> wrapper({...context, actionName, input 		  }, fn)
-				: self=> (input={})=> wrapper({...context, actionName, input, self}, fn)
+				? 			 (input={})=> wrapper({...context, actionName, ...input 		  }, fn)
+				: self=> (input={})=> wrapper({...context, actionName, ...input, self}, fn)
 		}
 
 

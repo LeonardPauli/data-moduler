@@ -24,6 +24,7 @@ const initialiseModule = moduler=> module=> {
 			item: {...MODULE.of(module), onlyNew},
 		}),
 		[namespace]: fn,
+		graphql: ({args: {item}})=> console.dir({item}, {depth:4, colors:1}) || {text:item.text, lol:234234},
 	}
 
 	// module.getters.load = {
