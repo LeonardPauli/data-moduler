@@ -1,6 +1,7 @@
 import * as rawHelpers from './helpers'
 import {
 	GraphQLObjectType,
+	GraphQLInputObjectType,
 
 	GraphQLInt,
 	GraphQLFloat,
@@ -42,24 +43,40 @@ const dataTypes = {
 // typeReducer
 const typeReducer = module=> {
 	const type = {}
+	const input = {}
 
 	type.name = module.name
 	type.description = module.description
+
+	input.name = type.name+'Input'
+	input.description = type.description
 	
-	const rawFields = type.fields || {}
-	Object.keys(module.fields).forEach(fieldName=> {
-		const field = module.fields[fieldName]
-		const newField = rawFields[fieldName] = rawFields[fieldName] || {}
-		newField.type = newField.type || field.type[namespace]
-		newField.resolve = newField.resolve || field.type.resolve || (data=> data[fieldName])
-	})
+	const getFields = (isInput, rawFields={})=> ()=> {
+		Object.keys(module.fields).forEach(fieldName=> {
+			const field = module.fields[fieldName]
+			const newField = rawFields[fieldName] = rawFields[fieldName] || {}
+
+			newField.type = newField.type || field.type[namespace]
+			if (isInput && newField.type.input) newField.type = newField.type.input
+
+			if (!isInput) newField.resolve = newField.resolve
+				|| field.type.resolve
+				|| (data=> data[fieldName])
+			// if (isInput) newField.defaultValue = ...
+		})
+		return rawFields
+	}
 
 	// TODO: add non-static getters
 	// TODO: add submodules (no, that's one for module type)
 
-	type.fields = rawFields // or ()=> rawFields
+	type.fields = getFields(false, type.fields)
+	input.fields = getFields(true, input.fields)
 
-	return new GraphQLObjectType(type)
+	const objectType = new GraphQLObjectType(type)
+	objectType.input = new GraphQLInputObjectType(input)
+
+	return objectType
 }
 
 
@@ -83,7 +100,8 @@ const actionsFixer = ({module, actions})=> {
 		// add arguments
 		ac.args = {}
 		if (action.input) Object.keys(action.input).forEach(k=> {
-			ac.args[k] = {type: action.input[k].type[namespace]}
+			const ownType = action.input[k].type[namespace]
+			ac.args[k] = {type: ownType.input || ownType}
 		})
 
 		// eslint-disable-next-line

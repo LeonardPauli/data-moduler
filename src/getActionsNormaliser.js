@@ -114,18 +114,19 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 
 			// consume return type
 			if (key == 'type') {
-				action.type = fieldNormaliser(field)
+				action.type = ()=> fieldNormaliser(field)
 				return
 			}
 
 			// consume input type
 			// ie. input: {name: {STRING, allowNull}}, ...
-			if (key == 'input') {
+			if (key == 'input') return action.input = ()=> {
+				const theField = typeof field == 'function'? field(): field
 				const fields = {}
-				Object.keys(field).forEach(k=> {
-					fields[k] = fieldNormaliser(field[k])
+				Object.keys(theField).forEach(k=> {
+					fields[k] = fieldNormaliser(theField[k])
 				})
-				return action[key] = fields
+				return fields
 			}
 
 			// consume isStatic

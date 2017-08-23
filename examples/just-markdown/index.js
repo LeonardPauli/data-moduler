@@ -79,10 +79,12 @@ const User = {
 // 	({action, args, root: {req: {user}, res}, module})=>
 // 		({user, module})
 
-const Note = {
+const Note = {}
+Object.assign(Note, {
 	comment: '*Tips:* Write one note every day in the morning',
 	fields: {
 		text: STRING,
+		hello: Note,
 		//user: User,
 	},
 	// mutations: {
@@ -113,7 +115,7 @@ const Note = {
 			// },
 	// },
 
-}
+})
 
 // Parse the base module (including all the models)
 const rawBaseModule = {

@@ -10,6 +10,7 @@ const getModuleInitialiser = moduler=> rawModule=> {
 	const module = Object.assign({}, rawModule)
 	module._isModule = true
 	module.type = Object.assign({}, rawModule.type)
+	module.type._module = module
 
 	// setup back-reference for references
 	rawModule._module = module

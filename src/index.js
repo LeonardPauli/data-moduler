@@ -93,6 +93,7 @@ export default class ModuleParser {
 		module.fields = fieldsNormaliser(module)
 
 		// actions, getters
+		// all action.type/.input is functions for later evaluation
 		const moduleActionsNormaliser = actionsNormaliser(module)
 		Object.assign(module, moduleActionsNormaliser('mutations'))
 		Object.assign(module, moduleActionsNormaliser('getters'))
@@ -100,6 +101,20 @@ export default class ModuleParser {
 		// set custom plugin type for module
 		plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>
 			module.type[namespace] = typeReducer(module))
+
+		// unwrap actions.type/input
+		const getActionTypesUnwrapper = module=> field=> {
+			const actions = module[field]
+			Object.keys(actions).forEach(k=> {
+				const action = actions[k]
+				action.type = action.type()
+				action.input = action.input()
+			})
+		}
+		const actionTypesUnwrapper = getActionTypesUnwrapper(module)
+		actionTypesUnwrapper('mutations')
+		actionTypesUnwrapper('getters')
+		
 		
 		// plugins
 		plugins.map(m=> m.afterTypeSetup).filter(v=> v).forEach(f=> f(module))

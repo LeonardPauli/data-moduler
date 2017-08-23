@@ -17,11 +17,12 @@ const initialiseModule = moduler=> module=> {
 			.createDocument({...input, id: id++})
 	fn.comment = 'Note from a plugin'
 
-	console.dir(module)
 	module.mutations.create = { isStatic,
 		type: MODULE.of(module),
 		returnTypeDescription: 'If ok or not',
-		input: module.fields,
+		input: ()=> ({
+			constructor: MODULE.of(module),
+		}),
 		[namespace]: fn,
 	}
 
