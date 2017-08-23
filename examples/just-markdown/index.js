@@ -13,7 +13,7 @@ export const moduler = new DataModuler({
 })
 
 // Define the modules (User, Note)
-const { allowNull, isStatic } = moduler.dataFlags
+const { allowNull, isStatic, onlyId } = moduler.dataFlags
 const { STRING, BOOLEAN, INT, SELF } = moduler.dataTypes
 
 const Color= {
@@ -85,7 +85,7 @@ Object.assign(Note, {
 	fields: {
 		text: STRING,
 		hello: Note,
-		//user: User,
+		user: {User, onlyId},
 	},
 	// mutations: {
 	// 	set: {
@@ -122,7 +122,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {Note},
+	modules: {Note, User},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule

@@ -59,8 +59,10 @@ const typeReducer = module=> {
 			const newField = rawFields[fieldName] = rawFields[fieldName] || {}
 
 			newField.type = newField.type || field.type[namespace]
-			if (isInput && newField.type.getReferenceInputType)
-				newField.type = newField.type.getReferenceInputType({onlyNew: false, onlyId: false})
+			if (isInput && newField.type.getReferenceInputType) {
+				const {onlyId, onlyNew} = field
+				newField.type = newField.type.getReferenceInputType({onlyId, onlyNew})
+			}
 
 			if (!isInput) newField.resolve = newField.resolve
 				|| field.type.resolve
