@@ -5,13 +5,18 @@ let id = 0
 const initialiseModule = moduler=> module=> {
 	module[namespace] = Object.assign({}, module[namespace])
 
-
 	if (!module.isEntity) return
 
 	const {isStatic, allowNull, onlyNew} = moduler.dataFlags
-	const {STRING, MODULE} = moduler.dataTypes
+	const {STRING, MODULE, LIST, ID} = moduler.dataTypes
 
 	// optionally setup default CRUD mutation/fetcher adapters
+
+	if (module.fields.id===undefined) module.fields.id = { ID,
+		// allowNull: {mutations: true, getters: false, default: false},
+		// fieldSectionName= fields/getters/mutations
+		ignored: ({fieldSectionName})=> fieldSectionName==='mutations',
+	}
 
 	const fn = ({store, module: {name}}, input)=> store.collections[name]
 			.createDocument({...input, id: id++})
@@ -24,7 +29,7 @@ const initialiseModule = moduler=> module=> {
 			item: {...MODULE.of(module), onlyNew},
 		}),
 		[namespace]: fn,
-		graphql: ({args: {item}})=> console.dir({item}, {depth:4, colors:1}) || {text:item.text, lol:234234},
+		graphql: ({thisAction}, input)=> thisAction[namespace](input.item),
 	}
 
 	// module.getters.load = {
@@ -32,22 +37,24 @@ const initialiseModule = moduler=> module=> {
 	// 		.documents.find(d=> d.id == self.id),
 	// }
 
-	// module.getters.list = { isStatic,
-	// 	comment: 'Has filter ability',
-	// 	input: {
-	// 		q: { STRING, allowNull,
-	// 			comment: 'Filter name',
-	// 		},
-	// 	},
-	// 	[namespace]: ({store, module: {name}}, input)=> store.collections[name]
-	// 		.documents.filter(d=> {
-	// 			const keys = Object.keys(input)
-	// 			if (!keys.length) return true
-	// 			return keys.some(k=>
-	// 				d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
-	// 			)
-	// 		}),
-	// }
+	module.getters.list = { isStatic,
+		comment: 'Has filter ability',
+		type: LIST.of(MODULE.of(module)),
+		input: ()=> ({
+			q: { STRING, allowNull,
+				comment: 'Filter name',
+			},
+		}),
+		[namespace]: ({store, module: {name}}, input)=> store.collections[name]
+			.documents.filter(d=> {
+				const keys = input? Object.keys(input): []
+				if (!keys.length) return true
+				return keys.some(k=>
+					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
+				)
+			}),
+		graphql: ({thisAction}, input)=> thisAction[namespace](input.q),
+	}
 
 	// module.mutations.update = {
 	// 	input: {name: STRING},
@@ -123,6 +130,11 @@ export default function TmpStorePlugin (defaults) {
 	return {
 		namespace,
 
+		initialize: _moduler=> {
+			// Object.assign(moduler.fieldDefaults.allowNull, {
+			// 	create: null, store: null, read: null, update: null,
+			// })
+		},
 		initialiseModule,
 		// dataTypes,
 		// typeReducer,

@@ -49,11 +49,18 @@ export default class ModuleParser {
 		// initialize data constants
 		this.dataFlags = getDataFlags(this)
 		this.dataTypes = getDataTypes(this)
+		this.fieldDefaults = {
+			type: this.dataTypes.STRING.type,
+			allowNull: {default: false, mutations: null, getters: null},
+		}
 
 		// initialize normalizers
 		this.metaNormaliser = getMetaNormaliser(this)
 		this.fieldsNormaliser = getFieldsNormaliser(this)
 		this.actionsNormaliser = getActionsNormaliser(this)
+
+		// initialize plugins for moduler
+		this.plugins.map(p=> p.initialize).filter(f=> f).forEach(f=> f(this))
 
 		// reset rawModules
 		this.rawModules = {}

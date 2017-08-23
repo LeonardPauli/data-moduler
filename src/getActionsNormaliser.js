@@ -33,12 +33,12 @@ import {getFieldNormaliser} from './getFieldsNormaliser'
 	*/
 
 // getActionsNormaliser
-const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
+const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 	const {plugins} = moduler
 	const {dataTypes, rawModules} = moduler
 	const fieldNormaliser = getFieldNormaliser(moduler)(module)
-	const rawActions = module[actionCategoryName] = module[actionCategoryName] || {}
-	
+	const rawActions = module[fieldSectionName] = module[fieldSectionName] || {}
+	const actions = module[fieldSectionName] = {}
 
 	// gather wrappers, actions are written for their custom type
 	// (ie. veux takes state/graphql takes root arg), but when called from
@@ -46,16 +46,23 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 	const wrappers = {
 		default: (context, fn)=> fn(context, context.input || {}),
 	}
-	plugins.map(p=> [p.actions && p.actions[actionCategoryName+'Wrapper'], p.namespace])
+	plugins.map(p=> [p.actions && p.actions[fieldSectionName+'Wrapper'], p.namespace])
 		.filter(([v, _])=> v).forEach(([wrapper, namespace])=> wrappers[namespace] = wrapper)
 
 
 	// default context, first sent to wrapper that then can decide what to send to action
-	const context = {moduler, module, actionCategoryName}
+	const wrapAction = (wrapper, fn, actionName)=> fields=> (input={})=>
+		wrapper({
+			...input,
+			...actions, actions, thisAction: actions[actionName],
+			input, // first + keep input to avoid override issue (ie if input.module)
+			moduler, module,
+			fieldSectionName, actionName,
+			...fields,
+		}, fn)
 
 
 	// repackage rawActions to actions
-	const actions = module[actionCategoryName] = {}
 	Object.keys(rawActions).forEach(actionName=> {
 		const rawAction = rawActions[actionName]
 		const action = actions[actionName] = {
@@ -77,8 +84,8 @@ const getActionsNormaliser = moduler=> module=> actionCategoryName=> {
 			action.rawActions[namespace] = fn
 			action[namespace] = action.isStatic
 				// TODO: put in a validation layer in-between input and wrapper?
-				? 			 (input={})=> wrapper({...context, actionName, ...input 		  }, fn)
-				: self=> (input={})=> wrapper({...context, actionName, ...input, self}, fn)
+				? 			 wrapAction(wrapper, fn, actionName)()
+				: self=> wrapAction(wrapper, fn, actionName)({self})
 		}
 
 

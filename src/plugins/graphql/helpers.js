@@ -20,10 +20,10 @@ export const getSchema = defaults=> (module, options={})=> {
 			entity.name = module.name+(isActions?'Actions':'Module')
 			entity.description = module.comment
 			
-			const actionCategoryName = isActions?'mutations':'getters'
+			const fieldSectionName = isActions?'mutations':'getters'
 			entity.fields = {}
 			// only add static actions, non-static actions are attached on the non-module ObjectType
-			const actions = module.graphql[actionCategoryName]
+			const actions = module.graphql[fieldSectionName]
 			Object.keys(actions).forEach(k=> {
 				const action = actions[k]
 				if (action.isStatic) return // only static ones
@@ -36,7 +36,7 @@ export const getSchema = defaults=> (module, options={})=> {
 			if (Object.keys(entity.fields).length==0) {
 				entity.fields.empty = {type: GraphQLString, args: {}, resolve: ()=> true}
 				console.warn('dataModuler; graphql plugin; '
-					+ `no ${actionCategoryName} defined for ${moduleName}`)
+					+ `no ${fieldSectionName} defined for ${moduleName}`)
 			}
 			
 			// var s = GraphQLObjectType

@@ -6,7 +6,8 @@ const getListOf = plugins=> ({type: rawInnerType})=> module=> {
 		: rawInnerType({module})
 
 	const newType = {}
-	plugins.forEach(({namespace, dataTypes: {LIST: pluginLIST}})=> {
+	plugins.forEach(({namespace, dataTypes={}})=> {
+		const {LIST: pluginLIST} = dataTypes
 		if (!pluginLIST || !pluginLIST.of) return
 		newType[namespace] = pluginLIST.of({
 			innerType,

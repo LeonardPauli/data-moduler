@@ -6,8 +6,8 @@
 
 
 // getFieldNormaliser -> bindModule -> fieldNormaliser
-export const getFieldNormaliser = ({dataTypes, rawModules})=> module=> _rawField=> {
-	const { STRING, MODULE } = dataTypes
+export const getFieldNormaliser = ({dataTypes, rawModules, fieldDefaults})=> module=> _rawField=> {
+	const { MODULE } = dataTypes
 
 	// default field
 	// (use of shorthand (ie. {STRING}) could be problematic here)
@@ -17,22 +17,34 @@ export const getFieldNormaliser = ({dataTypes, rawModules})=> module=> _rawField
 	// 	// instead of
 	// 	{type: STRING} + {type: INT} -> {type: INT}
 	// 	meh, when using assign, the order shouldn't be a problem.
-	const fieldDefaults = {
-		type: STRING.type,
-		allowNull: false,
+
+	const beforeReturn = field=> {
+		// normalise allowsNull
+		const rawAllowNull = typeof field.allowNull==='boolean'
+			? {default: field.allowNull}
+			: field.allowNull
+		field.allowNull = Object.assign({}, fieldDefaults.allowNull, rawAllowNull)
+
+		// propagate default
+		Object.keys(field.allowNull).forEach(k=> {
+			if (field.allowNull[k]===null)
+				field.allowNull[k] = field.allowNull.default
+		})
+
+		return field
 	}
 
 
 	// field: SELF
 	// field: module=> ...
 	if (typeof _rawField == 'function')
-		return Object.assign({}, fieldDefaults, {type: _rawField(module).type})
+		return beforeReturn(Object.assign({}, fieldDefaults, {type: _rawField(module).type}))
 
 	// field: Module,
 	// fix direct type; ie
 	// 	fields.user: RawUser -> fields.user: {type:{_model:User}}
 	if (_rawField._module || _rawField._isModule) // if raw or initialized
-		return Object.assign({}, fieldDefaults, {type: MODULE.of(_rawField).type})
+		return beforeReturn(Object.assign({}, fieldDefaults, {type: MODULE.of(_rawField).type}))
 
 
 
@@ -90,7 +102,7 @@ export const getFieldNormaliser = ({dataTypes, rawModules})=> module=> _rawField
 	}
 	
 
-	return field
+	return beforeReturn(field)
 }
 
 

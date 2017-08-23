@@ -54,8 +54,12 @@ const typeReducer = module=> {
 	input.description = type.description
 	
 	const getFields = (isInput, rawFields={})=> ()=> {
+		const fieldSectionName = isInput? 'mutations': 'getters'
 		Object.keys(module.fields).forEach(fieldName=> {
 			const field = module.fields[fieldName]
+			const ignore = field.ignored && field.ignored({namespace, fieldSectionName})
+			if (ignore) return
+
 			const newField = rawFields[fieldName] = rawFields[fieldName] || {}
 
 			newField.type = newField.type || field.type[namespace]
@@ -64,7 +68,9 @@ const typeReducer = module=> {
 				newField.type = newField.type.getReferenceInputType({onlyId, onlyNew})
 			}
 
-			if (!field.allowNull) newField.type = new GraphQLNonNull(newField.type)
+			console.dir({field, an: field.allowNull, fieldSectionName, fieldName}, {depth:3, colors:1})
+			if (!field.allowNull[fieldSectionName])
+				newField.type = new GraphQLNonNull(newField.type)
 			// if (isInput) newField.defaultValue = ... // if value is null (allowNull req.)
 
 			if (!isInput) newField.resolve = newField.resolve
@@ -81,7 +87,7 @@ const typeReducer = module=> {
 	input.fields = getFields(true, input.fields)
 
 	const objectType = new GraphQLObjectType(type)
-	const inputType = new GraphQLNonNull(new GraphQLInputObjectType(input))
+	const inputType = new GraphQLInputObjectType(input)
 	const idInputType = GraphQLID
 	const unionInput = new GraphQLInputObjectType({
 		name: module.name+'Reference',
@@ -130,12 +136,16 @@ const typeReducer = module=> {
 
 
 // actionsFixer
-const actionsFixer = ({module, actions})=> {
+const actionsFixer = ({module, fieldSectionName})=> {
 	// const {graphql: {type}} = module
+	const actions = module[fieldSectionName]
 	const fixed = {}
 
 	Object.keys(actions).forEach(actionName=> {
 		const action = actions[actionName]
+		const ignore = action.ignored && action.ignored({namespace, fieldSectionName})
+		if (ignore) return
+
 		const ac = fixed[actionName] = {}
 		
 		// add return type
@@ -145,6 +155,9 @@ const actionsFixer = ({module, actions})=> {
 				// ie. action.type: STRING || {STRING, allowNull} || {type: STRING, allowNull: true}
 			.type[namespace] // action.type.type (ie. not .allowNull), then .graphql to get the actual type
 		) || GraphQLBoolean // needs a type
+		
+		if (!action.type.allowNull[fieldSectionName])
+			ac.type = new GraphQLNonNull(ac.type)
 
 		// add arguments
 		ac.args = {}
@@ -154,7 +167,10 @@ const actionsFixer = ({module, actions})=> {
 			const {onlyId, onlyNew} = field
 			const inputType = ownType.getReferenceInputType
 				&& ownType.getReferenceInputType({onlyId, onlyNew})
-			ac.args[k] = {type: inputType || ownType}
+			const arg = ac.args[k] = {type: inputType || ownType}
+
+			if (!field.allowNull[fieldSectionName])
+				arg.type = new GraphQLNonNull(arg.type)
 		})
 
 		// eslint-disable-next-line
@@ -169,8 +185,8 @@ const actionsFixer = ({module, actions})=> {
 
 // afterTypeSetup
 const afterTypeSetup = module=> {
-	module[namespace].getters 	= actionsFixer({module, actions: module.getters})
-	module[namespace].mutations = actionsFixer({module, actions: module.mutations})
+	module[namespace].getters 	= actionsFixer({module, fieldSectionName: 'getters'})
+	module[namespace].mutations = actionsFixer({module, fieldSectionName: 'mutations'})
 }
 
 
@@ -206,6 +222,12 @@ const afterTypeSetup = module=> {
 // 	helpers,
 // }
 
+const actionsWrapper = (context, fn)=> fn({
+	...context,
+	//store: context.moduler[namespace].store,
+}, context.args)
+
+
 export default function GraphQLPlugin (defaults) {
 
 	// get helpers
@@ -225,8 +247,8 @@ export default function GraphQLPlugin (defaults) {
 		afterTypeSetup,
 
 		actions: {
-			mutationsWrapper: (context, fn)=> fn(context),
-			gettersWrapper: (context, fn)=> fn(context),
+			mutationsWrapper: actionsWrapper,
+			gettersWrapper: actionsWrapper,
 		},
 
 		helpers,

@@ -56,6 +56,9 @@ export default {
 		update: 
 	})[action],
 
+	// checked in typeReducer, namespace is plugin.namespace
+	ignored: ({fieldSectionName, namespace})=> fieldSectionName==='mutations' && namespace!='graphql'
+
 	getters: {
 		// available by default: list
 		// to disable, set

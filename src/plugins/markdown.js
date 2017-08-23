@@ -49,7 +49,7 @@ const mdLink = (text, link)=> link
 
 const mdTypeLink = field=> mdLink(
 	field.type.name,
-	field.type.documentationURL)+(field.allowNull? '?': ''
+	field.type.documentationURL)+(field.allowNull.default? '?': '' // TODO: allowNull is different
 )
 
 const tableFromRows = rows=> {
