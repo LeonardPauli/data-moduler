@@ -29,13 +29,44 @@ const initialiseModule = moduler=> module=> {
 			item: {...MODULE.of(module), onlyNew},
 		}),
 		[namespace]: fn,
-		graphql: ({thisAction}, input)=> thisAction[namespace](input.item),
+		graphql: (context, input)=> {
+			const {thisAction} = context
+			const returnModule = thisAction.type.type._module
+			if (returnModule) {
+				// console.dir({m: returnModule}, {depth: 5, colors:1})
+				const {fields} = returnModule
+				Object.keys(fields).forEach(k=> {
+					// console.dir({k}, {depth: 5, colors:1})
+					const field = fields[k]
+					const fieldModule = field.type._module
+					if (!fieldModule) return // skip primitives
+					const item = input.item[k]
+					if (!item) return // skip non-relevant
+					if (typeof item!=='object') return // all ok already, ie. id
+					if (item.id) return input.item[k] = item.id
+					if (!item.create) return // something wrong?
+
+					// create embedded and use its id instead
+					const res = fieldModule.mutations.create.graphql({...context, args: {item: item.create}})
+					input.item[k] = res.id // TODO: return created data as well
+					// console.dir({res}, {depth: 5, colors:1})
+				})
+			}
+			const fromStore = thisAction[namespace](input.item)
+			const data = {...fromStore}
+			return data
+		},
 	}
 
-	// module.getters.load = {
-	// 	[namespace]: ({store, module: {name}, self})=> store.collections[name]
-	// 		.documents.find(d=> d.id == self.id),
-	// }
+	module.getters.load = {
+		type: MODULE.of(module),
+		input: ()=> ({id: ID}),
+
+		// [namespace]: ({store, module: {name}, self})=> store.collections[name]
+		// 	.documents.find(d=> d.id == self.id),
+		[namespace]: ({store, module: {name}}, {id})=> store.collections[name]
+			.documents.find(d=> d.id == id),
+	}
 
 	module.getters.list = { isStatic,
 		comment: 'Has filter ability',

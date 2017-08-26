@@ -84,8 +84,12 @@ const User = {
 
 Object.assign(Note, {
 	comment: '*Tips:* Write one note every day in the morning',
+	modules: {
+		Color,
+	},
 	fields: {
 		text: STRING,
+		col: {Color, allowNull},
 		hello: {Note, allowNull},
 		// user: {User, onlyId},
 	},

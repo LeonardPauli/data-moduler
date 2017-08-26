@@ -72,9 +72,15 @@ const typeReducer = module=> {
 				newField.type = new GraphQLNonNull(newField.type)
 			// if (isInput) newField.defaultValue = ... // if value is null (allowNull req.)
 
-			if (!isInput) newField.resolve = newField.resolve
-				|| field.type.resolve
-				|| (data=> data[fieldName])
+			if (!isInput) {
+				const typeModule = field.type._module
+				newField.resolve = newField.resolve
+					|| field.type.resolve
+					|| !typeModule
+					? (data=> data[fieldName])
+					: ({id})=> typeModule.getters.load.tmpstore({id})()
+						//({hex: "SJSJ", id:1212}) // TODO: load child
+			}
 		})
 		return rawFields
 	}
