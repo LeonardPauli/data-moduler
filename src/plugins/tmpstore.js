@@ -15,7 +15,7 @@ const initialiseModule = moduler=> module=> {
 	if (module.fields.id===undefined) module.fields.id = { ID,
 		// allowNull: {mutations: true, getters: false, default: false},
 		// fieldSectionName= fields/getters/mutations
-		ignored: ({fieldSectionName})=> fieldSectionName==='mutations',
+		ignore: ({fieldSectionName})=> fieldSectionName==='mutations',
 	}
 
 	const fn = ({store, module: {name}}, input)=> store.collections[name]

@@ -57,7 +57,7 @@ const typeReducer = module=> {
 		const fieldSectionName = isInput? 'mutations': 'getters'
 		Object.keys(module.fields).forEach(fieldName=> {
 			const field = module.fields[fieldName]
-			const ignore = field.ignored && field.ignored({namespace, fieldSectionName})
+			const ignore = field.ignore && field.ignore({namespace, fieldSectionName})
 			if (ignore) return
 
 			const newField = rawFields[fieldName] = rawFields[fieldName] || {}
@@ -68,7 +68,6 @@ const typeReducer = module=> {
 				newField.type = newField.type.getReferenceInputType({onlyId, onlyNew})
 			}
 
-			console.dir({field, an: field.allowNull, fieldSectionName, fieldName}, {depth:3, colors:1})
 			if (!field.allowNull[fieldSectionName])
 				newField.type = new GraphQLNonNull(newField.type)
 			// if (isInput) newField.defaultValue = ... // if value is null (allowNull req.)
@@ -143,7 +142,7 @@ const actionsFixer = ({module, fieldSectionName})=> {
 
 	Object.keys(actions).forEach(actionName=> {
 		const action = actions[actionName]
-		const ignore = action.ignored && action.ignored({namespace, fieldSectionName})
+		const ignore = action.ignore && action.ignore({namespace, fieldSectionName})
 		if (ignore) return
 
 		const ac = fixed[actionName] = {}
