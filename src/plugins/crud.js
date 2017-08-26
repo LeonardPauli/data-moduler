@@ -10,7 +10,7 @@ const initialiseModule = moduler=> module=> {
 
 	const {plugins} = moduler
 	const {isStatic, allowNull, onlyNew} = moduler.dataFlags
-	const {STRING, MODULE, LIST, ID, SELF} = moduler.dataTypes
+	const {STRING, MODULE, LIST, ID, SELF, OBJECT} = moduler.dataTypes
 
 
 	// setup default entity fields
@@ -37,24 +37,24 @@ const initialiseModule = moduler=> module=> {
 		input: ()=> ({id: ID}),
 	}
 
-	// getters.list = { isStatic,
-	// 	comment: 'Has filter ability',
-	// 	type: LIST.of(MODULE.of(module)),
-	// 	input: ()=> ({
-	// 		q: { STRING, allowNull,
-	// 			comment: 'Filter name',
-	// 		},
-	// 	}),
-	// 	[namespace]: ({store, module: {name}}, input)=> store.collections[name]
-	// 		.documents.filter(d=> {
-	// 			const keys = input? Object.keys(input): []
-	// 			if (!keys.length) return true
-	// 			return keys.some(k=>
-	// 				d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
-	// 			)
-	// 		}),
-	// 	graphql: ({thisAction}, input)=> thisAction[namespace](input.q),
-	// }
+	getters.list = { isStatic,
+		comment: 'Has filter ability',
+		type: LIST.of(module),
+		input: ()=> {
+			const obj = {}
+
+			const filters = {}
+			Object.keys(module.fields).forEach(name=> {
+				const field = module.fields[name]
+				if (field.type._module) return
+				filters[name] = {...field.type, allowNull}
+			})
+			if (Object.keys(filters).length)
+				obj.q = {type: OBJECT.of(filters, 'Filter'), allowNull}
+
+			return obj
+		},
+	}
 
 	// mutations.update = {
 	// 	input: {name: STRING},

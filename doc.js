@@ -20,7 +20,7 @@ const {
 
 const actionPathGenerator = ({key})=> key.replace(/[A-Z]/g, l=> '-'+l.toLowerCase())
 if (useId) {
-	item.params.id = INT,
+	item.params.id = INT
 	const {path} = item
 	item.path = opt=> `:id/`+actionPathGenerator(opt)
 	// -${module.name}
@@ -34,7 +34,7 @@ export default {
 	fields: {
 		note: STRING,
 		note: { STRING },
-		note: { STRING(30) },
+		note: { STRING: 30 },
 		note: { type: {
 			sql: Sequelize.STRING(30),
 			graphql: GraphQLString,
@@ -42,7 +42,7 @@ export default {
 		note: { STRING, allowNull },
 		note: { STRING,
 			get: (data, {key})=> data[key],
-			set: ...,
+			// set: ...,
 		}
 	},
 	// root is graphql rootValue or {req, res} if express

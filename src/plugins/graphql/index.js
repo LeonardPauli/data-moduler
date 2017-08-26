@@ -36,28 +36,38 @@ const dataTypes = {
 	DATE: 		{ type: GraphQLString },
 	INT: 			{ type: GraphQLInt },
 	DECIMAL: 	{ type: GraphQLFloat },
-	LIST: 		{ type: GraphQLList, of: ({ ownInnerType })=> props=>
-		new GraphQLList(ownInnerType(props)),
+	LIST: 		{ type: GraphQLList, of: ({ ownInnerType })=> module=>
+		new GraphQLList(ownInnerType(module)),
 	},
+	OBJECT: 	{ type: GraphQLObjectType, typeReducer: ({type: {fields, name}})=> {
+		const ownType = typeReducer({fields, name, description: null})
+		const {getReferenceInputType} = ownType
+		ownType.getReferenceInputType = ()=> getReferenceInputType({onlyNew: true})
+		return ownType
+	}},
 }
 
 
 
-// typeReducer
-const typeReducer = module=> {
+// typeReducer, (module)
+const typeReducer = ({
+	name,
+	description,
+	fields,
+})=> {
 	const type = {}
 	const input = {}
 
-	type.name = module.name
-	type.description = module.description
+	type.name = name
+	type.description = description
 
-	input.name = module.name+'Input'
-	input.description = type.description
+	input.name = name+'Input'
+	input.description = description
 	
 	const getFields = (isInput, rawFields={})=> ()=> {
 		const fieldSectionName = isInput? 'mutations': 'getters'
-		Object.keys(module.fields).forEach(fieldName=> {
-			const field = module.fields[fieldName]
+		Object.keys(fields).forEach(fieldName=> {
+			const field = fields[fieldName]
 			const ignore = field.ignore && field.ignore({namespace, fieldSectionName})
 			if (ignore) return
 
@@ -105,7 +115,7 @@ const typeReducer = module=> {
 	const inputType = new GraphQLInputObjectType(input)
 	const idInputType = GraphQLID
 	const unionInput = new GraphQLInputObjectType({
-		name: module.name+'Reference',
+		name: name+'Reference',
 		description: 'Either pass on a reference to an existing'
 			+' or create a new by passing its data',
 		fields: {
@@ -217,6 +227,10 @@ const crud = {
 		load: ({nextPlugin})=> (context, input)=> {
 			const {thisAction, self} = context
 			return thisAction[nextPlugin.namespace](self)(input, context)
+		},
+		list: ({nextPlugin})=> (context, input)=> {
+			const {thisAction} = context
+			return thisAction[nextPlugin.namespace](input, context)
 		},
 	},
 }

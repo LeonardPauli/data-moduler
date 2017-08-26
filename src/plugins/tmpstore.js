@@ -78,6 +78,15 @@ const crud = {
 		// 	.documents.find(d=> d.id == self.id),
 		load: ()=> ({store, module: {name}, self})=> store.collections[name]
 			.documents.find(d=> d.id == self.id),
+
+		list: ()=> ({store, module: {name}}, {q: input} = {})=> store.collections[name]
+			.documents.filter(d=> {
+				const keys = input? Object.keys(input): []
+				if (!keys.length) return true
+				return keys.some(k=>
+					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
+				)
+			}),
 	},
 }
 
@@ -89,14 +98,20 @@ const actionsWrapper = ({context, fn})=> {
 	const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
 	const fieldsParser = itemFieldsIterator(context, fieldParser)
 	const {fieldSectionName} = context
+	const {isList} = context.thisAction.type.type
+
 	const input = fieldSectionName=='mutations'
 		? fieldsSerializer(context.input)
 		: context.input
 	
-	return fieldsParser(fn({
+	const res = fn({
 		...context,
 		store: context.moduler[namespace].store,
-	}, input))
+	}, input)
+
+	if (!res) return null
+	if (isList) return res.map(fieldsParser)
+	return fieldsParser(res)
 }
 
 export default function TmpStorePlugin (defaults) {

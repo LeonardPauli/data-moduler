@@ -25,6 +25,10 @@ baseModule.tmpstore.attach({store})
 // log(baseModule, 7)
 // log(baseModule.modules, 10)
 
+const {Note} = baseModule.modules
+Note.mutations.create.tmpstore({ text: 'Hugo' })
+Note.mutations.create.tmpstore({ text: 'House' })
+
 // const {User} = baseModule.modules
 // log('\nCREATE')
 // User.mutations.create.tmpstore({name: 'Hugo'})

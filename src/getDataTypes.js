@@ -1,22 +1,24 @@
-import getFieldsNormaliser from './getFieldsNormaliser'
+import getFieldsNormaliser, {getFieldNormaliser} from './getFieldsNormaliser'
 
 // helpers
-const getListOf = plugins=> ({type: rawInnerType})=> module=> {
-	const innerType = typeof rawInnerType !== 'function' ? rawInnerType
-		: rawInnerType({module})
+const getListOf = moduler=> type=> module=> {
+	const fieldNormaliser = getFieldNormaliser(moduler)(module)
+	const {plugins} = moduler
+	const innerType = fieldNormaliser({type}).type
 
 	const newType = {}
 	plugins.forEach(({namespace, dataTypes={}})=> {
-		const {LIST: pluginLIST} = dataTypes
-		if (!pluginLIST || !pluginLIST.of) return
-		newType[namespace] = pluginLIST.of({
+		const {LIST} = dataTypes
+		if (!LIST || !LIST.of) return
+
+		newType[namespace] = LIST.of({
 			innerType,
-			ownInnerType: typeof innerType[namespace] === 'function'
-				? innerType[namespace] : ()=> innerType[namespace],
+			ownInnerType: ()=> innerType[namespace],
 		})(module)
 	})
 
-	return newType
+	newType.isList = true
+	return {type: newType}
 }
 
 
@@ -44,20 +46,31 @@ const moduleTypeUnwrapper = _moduler=> module=> {
 	// return {type: module} // rawModule._module will point to initialised module
 }
 
-const objectTypeCreator = _moduler=> fields=> {
-	const fieldsNormaliser = getFieldsNormaliser(_moduler)
-	const obj = {
-		name: 'OBJECT-X',
-		fields: fieldsNormaliser({fields}),
+const objectTypeCreator = moduler=> (fields, name)=> module=> {
+	const fieldNormaliser = getFieldNormaliser(moduler)(module)
+	const {plugins} = moduler
+	const type = {
+		name: module.name+(name || 'Object'),
+		fields: {},
 	}
+	Object.keys(fields).forEach(k=> {
+		type.fields[k] = fieldNormaliser(fields[k])
+	})
+
+	plugins.forEach(({namespace, dataTypes={}})=> {
+		const {OBJECT} = dataTypes
+		if (!OBJECT || !OBJECT.typeReducer) return
+
+		type[namespace] = OBJECT.typeReducer({ type })
+	})
 
 	// helpers
-	Object.defineProperty(obj, 'toString', {
+	Object.defineProperty(type, 'toString', {
 		enumerable: false,
 		value: moduleToString,
 	})
 
-	return {type: obj}
+	return {type}
 }
 
 
@@ -72,10 +85,9 @@ const defaultDataTypes = {
 	LIST: {
 		statics: {
 			// LIST is special, used like {type: LIST.of(...)}
-			of: ({plugins})=> {
-				const fn = getListOf(plugins)
-				return props=> ({type: fn(props)})
-			},
+			of: moduler=> type=> ({
+				type: getListOf(moduler)(type),
+			}),
 		},
 	},
 	SELF: moduleTypeUnwrapper,
