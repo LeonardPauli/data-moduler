@@ -1,3 +1,4 @@
+import {itemFieldsIterator} from '../helpers'
 import * as rawHelpers from './helpers'
 import {
 	GraphQLObjectType,
@@ -76,7 +77,8 @@ const typeReducer = module=> {
 				const primitiveFieldResolver = data=> data[fieldName]
 				const typeModule = field.type._module
 				const moduleFieldResolver = (parent, args, req, {rootValue})=> {
-					const self = parent
+					const self = parent[fieldName]
+					if (!self) return null
 					return typeModule.getters.load[namespace](self)
 						.native({parent, args, req, rootValue})
 						// in this case, parent and args are probably superfluous
@@ -205,9 +207,7 @@ const afterTypeSetup = module=> {
 
 const crud = {
 	actions: {
-		create: ({nextPlugin})=> (_context, _input)=> {
-			const handleCreateDirective = getHandleCreateDirectiveMiddleware(namespace)
-			const {context, input} = handleCreateDirective(_context, _input)
+		create: ({nextPlugin})=> (context, input)=> {
 			const {thisAction} = context
 			return thisAction[nextPlugin.namespace](input.item, context)
 		},
@@ -218,49 +218,19 @@ const crud = {
 	},
 }
 
+const fieldSerializer = ({data, module, context})=> {
+	const {actionName} = context
+	if (!module || actionName!='create') return data
+	if (!data || data.id) return data
+	const item = data.create
+	if (!item) throw new Error('data-moduler: crud/graphql-plugin: '
+		+'id or create required on InputReference') // something wrong?
 
-
-const createDirectiveItemTransformer = (context, item, create)=> {
-	const {thisAction} = context
-	const newItem = {...item}
-
-	const returnModule = thisAction.type.type._module
-	if (!returnModule) return newItem
-
-	// if a create is requested (field: {create: {...}}), do it
-	const {fields} = returnModule
-	Object.keys(fields).forEach(k=> {
-		const field = fields[k]
-		const fieldModule = field.type._module
-		if (!fieldModule) return // skip primitives
-		
-		const ref = newItem[k]
-		if (!ref) return // skip non-relevant
-		if (typeof ref!=='object') return // all ok already, ie. id
-		if (ref.id) return // reference is there
-
-		const item = ref.create
-		if (!item) throw new Error('data-moduler: crud-plugin: '
-			+'id or create required on InputReference') // something wrong?
-
-		// create the item and put back as it includes its reference
-		newItem[k] = create(fieldModule, item, context)
-	})
-
-	return newItem
-}
-
-const getHandleCreateDirectiveMiddleware = pluginNamespace=> (context, input)=> {
 	const create = (fieldModule, item, context)=>
-		fieldModule.mutations.create[pluginNamespace]({item}, context)
+		fieldModule.mutations.create[namespace]({item}, context)
 
-	return {context, input: {
-		...input,
-		item: createDirectiveItemTransformer(context, input.item, create),
-	}}
+	return create(module, item, context)
 }
-
-
 
 // moduleTypeGenerator
 // const moduleTypeGenerator = module=> {
@@ -294,10 +264,19 @@ const getHandleCreateDirectiveMiddleware = pluginNamespace=> (context, input)=> 
 // 	helpers,
 // }
 
-const actionsWrapper = (context, fn)=> fn({
-	...context,
-	//store: context.moduler[namespace].store,
-}, context.input.args)
+
+
+const actionsWrapper = ({context, fn})=> {
+	const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
+
+	return fn({
+		...context,
+		//store: context.moduler[namespace].store,
+	}, {
+		...context.input.args,
+		item: fieldsSerializer(context.input.args.item),
+	})
+}
 
 const actionsInputNormaliser = (input, context)=> {
 	const {parent, req, rootValue} = context

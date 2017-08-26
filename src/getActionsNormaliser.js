@@ -45,7 +45,8 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 	// DataModuler, it should be same format. Accomplished by wrapping actions per type.
 	const wrappers = {
 		default: {
-			wrapper: (context, fn)=> fn(context, context.input || {}),
+			wrapper: ({context, fn})=>
+				fn(context, context.input || {}),
 			inputNormaliser: (input, _context)=> input,
 		},
 	}
@@ -77,21 +78,23 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 			...fields,
 		}
 
-		const native = (input={})=> wrapper.wrapper({
+		const native = (input={})=> wrapper.wrapper({context: {
 			...input, // could be risky, if trying to
 				// access a prop not defined, but sent from client
 			...betweenInput,
 			input, // first + keep input to avoid override issue (ie if input.module)
 			...afterInput,
-		}, fn)
+		}, fn})
 
-		const normalised = (rawInput, context={
-			...betweenInput,
-			...afterInput,
-		})=> {
+		const normalised = (rawInput, context={})=> {
+			const ctx = {
+				...context,
+				...betweenInput,
+				...afterInput,
+			}
 			// Object.assign({}, defaultContext, context) to allow passing partial context?
-			const input = wrapper.inputNormaliser(rawInput, context)
-			return native(input, context)
+			const input = wrapper.inputNormaliser(rawInput, ctx)
+			return native(input, ctx)
 		}
 
 		normalised.native = native

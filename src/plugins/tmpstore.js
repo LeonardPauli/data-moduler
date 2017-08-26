@@ -1,3 +1,5 @@
+import {itemFieldsIterator} from './helpers'
+
 // namespace
 const namespace = 'tmpstore'
 
@@ -23,6 +25,7 @@ class Collection {
 	}
 
 	createDocument (doc) {
+		// if (doc.col == 2) throw new Error(`Color(id=${doc.col}) does not exist`)
 		Object.defineProperty(doc, 'toString', {
 			enumerable: false,
 			value: ()=> doc.name,
@@ -68,25 +71,33 @@ const attach = defaults=> (module, options={})=> {
 
 const crud = {
 	actions: {
-		create: ()=> ({store, module: {name}}, input)=> {
-			store.collections[name].createDocument({...input, id: store.collections[name].newId()})
-		},
+		create: ()=> ({store, module: {name}}, input)=> store.collections[name]
+			.createDocument({...input, id: store.collections[name].newId()}),
 
 		// [namespace]: ({store, module: {name}, self})=> store.collections[name]
 		// 	.documents.find(d=> d.id == self.id),
 		load: ()=> ({store, module: {name}, self})=> store.collections[name]
 			.documents.find(d=> d.id == self.id),
 	},
-	serializeField: (data, field)=> !field.type._module? data : data.id,
-	parseField: (data, field)=> !field.type._module? data : {id: data},
 }
 
 
+const fieldSerializer = ({data, module})=> module && data? data.id: data
+const fieldParser = ({data, module})=> module && data? {id: data}: data
 
-const actionsWrapper = (context, fn)=> fn({
-	...context,
-	store: context.moduler[namespace].store,
-}, context.input)
+const actionsWrapper = ({context, fn})=> {
+	const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
+	const fieldsParser = itemFieldsIterator(context, fieldParser)
+	const {fieldSectionName} = context
+	const input = fieldSectionName=='mutations'
+		? fieldsSerializer(context.input)
+		: context.input
+	
+	return fieldsParser(fn({
+		...context,
+		store: context.moduler[namespace].store,
+	}, input))
+}
 
 export default function TmpStorePlugin (defaults) {
 	return {
