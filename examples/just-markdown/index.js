@@ -3,10 +3,11 @@
 
 // Setup the moduler (DataModuler) with plugins
 import DataModuler, {plugins} from '../../src'
-const {markdown, tmpstore, graphql} = plugins
+const {tmpstore, crud, graphql, markdown} = plugins
 export const moduler = new DataModuler({
 	plugins: [
 		tmpstore(),
+		crud(),
 		graphql(),
 		// markdown(),
 	],

@@ -102,6 +102,11 @@ export default {
 	}
 }
 
+// User.mutations.create.graphql.middlewares = [
+// 	(context, input, next)=> next(context, {...input, addedField: 123}),
+// 	(context, input, next)=> next(context, {...input, addedField: input.addedField-100})
+// ]
+
 
 
 

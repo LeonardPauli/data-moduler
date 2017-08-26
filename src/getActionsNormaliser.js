@@ -44,23 +44,59 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 	// (ie. veux takes state/graphql takes root arg), but when called from
 	// DataModuler, it should be same format. Accomplished by wrapping actions per type.
 	const wrappers = {
-		default: (context, fn)=> fn(context, context.input || {}),
+		default: {
+			wrapper: (context, fn)=> fn(context, context.input || {}),
+			inputNormaliser: (input, _context)=> input,
+		},
 	}
-	plugins.map(p=> [p.actions && p.actions[fieldSectionName+'Wrapper'], p.namespace])
-		.filter(([v, _])=> v).forEach(([wrapper, namespace])=> wrappers[namespace] = wrapper)
+	plugins.filter(p=> p.actions).forEach(({
+		namespace,
+		actions: {
+			wrapper= wrappers.default.wrapper,
+			inputNormaliser= wrappers.default.inputNormaliser,
+		},
+	})=> wrappers[namespace] = {
+		wrapper: typeof wrapper === 'object'
+			? wrapper[fieldSectionName]
+			: wrapper,
+		inputNormaliser: typeof inputNormaliser === 'object'
+			? inputNormaliser[fieldSectionName]
+			: inputNormaliser,
+	})
 
 
 	// default context, first sent to wrapper that then can decide what to send to action
-	const wrapAction = (wrapper, fn, actionName)=> fields=> (input={})=>
-		wrapper({
-			...input,
-			...actions, actions, thisAction: actions[actionName],
-			input, // first + keep input to avoid override issue (ie if input.module)
+	const wrapAction = (wrapper, fn, actionName)=> fields=> {
+		const betweenInput = {
+			...actions, actions,
+			thisAction: actions[actionName],
+		}
+		const afterInput = {
 			moduler, module,
 			fieldSectionName, actionName,
 			...fields,
+		}
+
+		const native = (input={})=> wrapper.wrapper({
+			...input, // could be risky, if trying to
+				// access a prop not defined, but sent from client
+			...betweenInput,
+			input, // first + keep input to avoid override issue (ie if input.module)
+			...afterInput,
 		}, fn)
 
+		const normalised = (rawInput, context={
+			...betweenInput,
+			...afterInput,
+		})=> {
+			// Object.assign({}, defaultContext, context) to allow passing partial context?
+			const input = wrapper.inputNormaliser(rawInput, context)
+			return native(input, context)
+		}
+
+		normalised.native = native
+		return normalised
+	}
 
 	// repackage rawActions to actions
 	Object.keys(rawActions).forEach(actionName=> {
@@ -81,7 +117,7 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 					+`'${namespace}' wrapper couldn't be find`)
 
 			// wrap
-			action.rawActions[namespace] = fn
+			action.rawActions[namespace] = fn // used for key-lookup?
 			action[namespace] = action.isStatic
 				// TODO: put in a validation layer in-between input and wrapper?
 				? 			 wrapAction(wrapper, fn, actionName)()

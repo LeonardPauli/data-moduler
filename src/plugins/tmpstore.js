@@ -1,114 +1,27 @@
 // namespace
 const namespace = 'tmpstore'
-let id = 0
+
 // initialiseModule
-const initialiseModule = moduler=> module=> {
+const initialiseModule = _moduler=> module=> {
 	module[namespace] = Object.assign({}, module[namespace])
-
-	if (!module.isEntity) return
-
-	const {isStatic, allowNull, onlyNew} = moduler.dataFlags
-	const {STRING, MODULE, LIST, ID} = moduler.dataTypes
-
-	// optionally setup default CRUD mutation/fetcher adapters
-
-	if (module.fields.id===undefined) module.fields.id = { ID,
-		// allowNull: {mutations: true, getters: false, default: false},
-		// fieldSectionName= fields/getters/mutations
-		ignore: ({fieldSectionName})=> fieldSectionName==='mutations',
-	}
-
-	const fn = ({store, module: {name}}, input)=> store.collections[name]
-			.createDocument({...input, id: id++})
-	fn.comment = 'Note from a plugin'
-
-	module.mutations.create = { isStatic,
-		type: MODULE.of(module),
-		returnTypeDescription: 'If ok or not',
-		input: ()=> ({
-			item: {...MODULE.of(module), onlyNew},
-		}),
-		[namespace]: fn,
-		graphql: (context, input)=> {
-			const {thisAction} = context
-			const returnModule = thisAction.type.type._module
-			if (returnModule) {
-				// console.dir({m: returnModule}, {depth: 5, colors:1})
-				const {fields} = returnModule
-				Object.keys(fields).forEach(k=> {
-					// console.dir({k}, {depth: 5, colors:1})
-					const field = fields[k]
-					const fieldModule = field.type._module
-					if (!fieldModule) return // skip primitives
-					const item = input.item[k]
-					if (!item) return // skip non-relevant
-					if (typeof item!=='object') return // all ok already, ie. id
-					if (item.id) return input.item[k] = item.id
-					if (!item.create) return // something wrong?
-
-					// create embedded and use its id instead
-					const res = fieldModule.mutations.create.graphql({...context, args: {item: item.create}})
-					input.item[k] = res.id // TODO: return created data as well
-					// console.dir({res}, {depth: 5, colors:1})
-				})
-			}
-			const fromStore = thisAction[namespace](input.item)
-			const data = {...fromStore}
-			return data
-		},
-	}
-
-	module.getters.load = {
-		type: MODULE.of(module),
-		input: ()=> ({id: ID}),
-
-		// [namespace]: ({store, module: {name}, self})=> store.collections[name]
-		// 	.documents.find(d=> d.id == self.id),
-		[namespace]: ({store, module: {name}}, {id})=> store.collections[name]
-			.documents.find(d=> d.id == id),
-	}
-
-	module.getters.list = { isStatic,
-		comment: 'Has filter ability',
-		type: LIST.of(MODULE.of(module)),
-		input: ()=> ({
-			q: { STRING, allowNull,
-				comment: 'Filter name',
-			},
-		}),
-		[namespace]: ({store, module: {name}}, input)=> store.collections[name]
-			.documents.filter(d=> {
-				const keys = input? Object.keys(input): []
-				if (!keys.length) return true
-				return keys.some(k=>
-					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
-				)
-			}),
-		graphql: ({thisAction}, input)=> thisAction[namespace](input.q),
-	}
-
-	// module.mutations.update = {
-	// 	input: {name: STRING},
-	// 	[namespace]: ({module, self}, input)=>
-	// 		Object.assign(module.getters.load[namespace](self)(), input),
-	// }
-
-	// module.mutations.delete = {
-	// 	[namespace]: ({store, module, self})=> {
-	// 		const doc = module.getters.load[namespace](self)()
-	// 		return store.collections[module.name].removeDocument(doc)
-	// 	},
-	// }
 }
 
 
 // exported helpers
 class Collection {
 	documents = []
+	
 	constructor (name) {
 		this.name = name
 	}
 	toString () { return this.name }
+	
+	_lastId = 0
+	newId () {
+		this._lastId++
+		return this._lastId
+	}
+
 	createDocument (doc) {
 		Object.defineProperty(doc, 'toString', {
 			enumerable: false,
@@ -152,6 +65,24 @@ const attach = defaults=> (module, options={})=> {
 }
 
 
+
+const crud = {
+	actions: {
+		create: ()=> ({store, module: {name}}, input)=> {
+			store.collections[name].createDocument({...input, id: store.collections[name].newId()})
+		},
+
+		// [namespace]: ({store, module: {name}, self})=> store.collections[name]
+		// 	.documents.find(d=> d.id == self.id),
+		load: ()=> ({store, module: {name}, self})=> store.collections[name]
+			.documents.find(d=> d.id == self.id),
+	},
+	serializeField: (data, field)=> !field.type._module? data : data.id,
+	parseField: (data, field)=> !field.type._module? data : {id: data},
+}
+
+
+
 const actionsWrapper = (context, fn)=> fn({
 	...context,
 	store: context.moduler[namespace].store,
@@ -171,8 +102,7 @@ export default function TmpStorePlugin (defaults) {
 		// typeReducer,
 
 		actions: {
-			mutationsWrapper: actionsWrapper,
-			gettersWrapper: actionsWrapper,
+			wrapper: actionsWrapper,
 		},
 
 		helpers: {
@@ -183,6 +113,8 @@ export default function TmpStorePlugin (defaults) {
 		moduleHelpers: {
 			attach: module=> options=> attach(defaults)(module, options),
 		},
+
+		crud,
 
 		documentation: {
 			title: 'tmpstore - Temporary storage (caching)',

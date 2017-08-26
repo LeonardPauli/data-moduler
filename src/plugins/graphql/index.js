@@ -73,13 +73,21 @@ const typeReducer = module=> {
 			// if (isInput) newField.defaultValue = ... // if value is null (allowNull req.)
 
 			if (!isInput) {
+				const primitiveFieldResolver = data=> data[fieldName]
 				const typeModule = field.type._module
+				const moduleFieldResolver = (parent, args, req, {rootValue})=> {
+					const self = parent
+					return typeModule.getters.load[namespace](self)
+						.native({parent, args, req, rootValue})
+						// in this case, parent and args are probably superfluous
+				}
+
 				newField.resolve = newField.resolve
 					|| field.type.resolve
-					|| !typeModule
-					? (data=> data[fieldName])
-					: ({id})=> typeModule.getters.load.tmpstore({id})()
-						//({hex: "SJSJ", id:1212}) // TODO: load child
+					|| typeModule
+						? moduleFieldResolver
+						: primitiveFieldResolver
+						// ({hex: "SJSJ", id:1212}) // TODO: load child
 			}
 		})
 		return rawFields
@@ -178,10 +186,10 @@ const actionsFixer = ({module, fieldSectionName})=> {
 				arg.type = new GraphQLNonNull(arg.type)
 		})
 
+		// from graphql: (root, args, req, {rootValue})
 		// eslint-disable-next-line
-		ac.resolve = (root, args, req, {rootValue})=> action[namespace]({
-			action: actionName, args, root, module, req, rootValue,
-		})
+		ac.resolve = (parent, args, req, {rootValue})=> action[namespace]
+			.native({parent, args, req, rootValue})
 	})
 	
 	return fixed
@@ -193,6 +201,65 @@ const afterTypeSetup = module=> {
 	module[namespace].getters 	= actionsFixer({module, fieldSectionName: 'getters'})
 	module[namespace].mutations = actionsFixer({module, fieldSectionName: 'mutations'})
 }
+
+
+const crud = {
+	actions: {
+		create: ({nextPlugin})=> (_context, _input)=> {
+			const handleCreateDirective = getHandleCreateDirectiveMiddleware(namespace)
+			const {context, input} = handleCreateDirective(_context, _input)
+			const {thisAction} = context
+			return thisAction[nextPlugin.namespace](input.item, context)
+		},
+		load: ({nextPlugin})=> (context, input)=> {
+			const {thisAction, self} = context
+			return thisAction[nextPlugin.namespace](self)(input, context)
+		},
+	},
+}
+
+
+
+const createDirectiveItemTransformer = (context, item, create)=> {
+	const {thisAction} = context
+	const newItem = {...item}
+
+	const returnModule = thisAction.type.type._module
+	if (!returnModule) return newItem
+
+	// if a create is requested (field: {create: {...}}), do it
+	const {fields} = returnModule
+	Object.keys(fields).forEach(k=> {
+		const field = fields[k]
+		const fieldModule = field.type._module
+		if (!fieldModule) return // skip primitives
+		
+		const ref = newItem[k]
+		if (!ref) return // skip non-relevant
+		if (typeof ref!=='object') return // all ok already, ie. id
+		if (ref.id) return // reference is there
+
+		const item = ref.create
+		if (!item) throw new Error('data-moduler: crud-plugin: '
+			+'id or create required on InputReference') // something wrong?
+
+		// create the item and put back as it includes its reference
+		newItem[k] = create(fieldModule, item, context)
+	})
+
+	return newItem
+}
+
+const getHandleCreateDirectiveMiddleware = pluginNamespace=> (context, input)=> {
+	const create = (fieldModule, item, context)=>
+		fieldModule.mutations.create[pluginNamespace]({item}, context)
+
+	return {context, input: {
+		...input,
+		item: createDirectiveItemTransformer(context, input.item, create),
+	}}
+}
+
 
 
 // moduleTypeGenerator
@@ -230,8 +297,12 @@ const afterTypeSetup = module=> {
 const actionsWrapper = (context, fn)=> fn({
 	...context,
 	//store: context.moduler[namespace].store,
-}, context.args)
+}, context.input.args)
 
+const actionsInputNormaliser = (input, context)=> {
+	const {parent, req, rootValue} = context
+	return {parent, req, rootValue, args: input}
+}
 
 export default function GraphQLPlugin (defaults) {
 
@@ -252,11 +323,13 @@ export default function GraphQLPlugin (defaults) {
 		afterTypeSetup,
 
 		actions: {
-			mutationsWrapper: actionsWrapper,
-			gettersWrapper: actionsWrapper,
+			wrapper: actionsWrapper,
+			inputNormaliser: actionsInputNormaliser,
 		},
 
 		helpers,
 		moduleHelpers,
+
+		crud,
 	}
 }

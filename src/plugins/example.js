@@ -4,8 +4,6 @@ const namespace = 'myplugin'
 // initialiseModule
 const initialiseModule = _moduler=> module=> {
 	module[namespace] = Object.assign({}, module[namespace])
-
-	// optionally setup default CRUD mutation/fetcher adapters
 }
 
 
@@ -77,9 +75,36 @@ export default function Example (defaults) {
 		typeReducer,
 		afterTypeSetup,
 
-		actions: {
-			mutationWrapper: (context, fn)=> fn(context),
-			fetcherWrapper: (context, fn)=> fn(context),
+		actions: { // needs to be !!.actions === true to enable plugin actions
+			// if module.mutations.myAction = {
+			// 	myplugin: ({someField})=> ... // write whatever's used with the plugin
+			// }
+			// or module.mutations.myplugin('some data', optionalContextToPassOnToInputNormaliser)
+			// context + 'some data' -> inputNormaliser -> module.mutations.myplugin.native(...)
+			// 
+			// called like module.mutations.myplugin.native({a: 'some data'})
+			// {a: 'some data'} + context with module etc -> wrapper -> the defined function
+			// 
+
+			wrapper: (context, fn)=> fn(
+				{someField: context.input}, {
+					...context,
+					addedToContext: 'data',
+				}
+			),
+			// wrapper: {
+			// 	mutations: fn,
+			// 	getters: fn,
+			// }
+
+			inputNormaliser: (input, context)=> {
+				const {thing} = context // plugin context might not have been provided
+				return {a: thing+input}
+			},
+			// inputNormaliser: {
+			// 	mutations: fn,
+			// 	getters: fn,
+			// }
 		},
 
 		helpers: {
@@ -88,5 +113,7 @@ export default function Example (defaults) {
 		moduleHelpers: {
 			writeFile: module=> options=> writeFile(defaults)(module, options),
 		},
+
+		otherPlugin: '...',
 	}
 }
