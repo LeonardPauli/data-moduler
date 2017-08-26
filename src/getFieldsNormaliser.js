@@ -74,7 +74,11 @@ export const getFieldNormaliser = ({dataTypes, rawModules, fieldDefaults})=> mod
 		// ie. field: {STRING}
 		// ('field: STRING', same as 'field: {type:STRING}', handled elsewhere)
 		const dataType = dataTypes[k]
-		if (dataType) return field.type = rawField[k].type
+		if (dataType) {
+			const wrapper = typeof rawField[k] == 'function'
+				? rawField[k](module) : rawField[k]
+			return field.type = wrapper.type
+		}
 
 		// ie. field: {Module},
 		const rawModule = rawModules[k]
@@ -91,9 +95,10 @@ export const getFieldNormaliser = ({dataTypes, rawModules, fieldDefaults})=> mod
 	if (field.type && typeof field.type.type === 'function')
 		field.type = field.type.type
 
+
 	let i = 0
 	while (typeof field.type === 'function') {
-		field.type = field.type(module)
+		field.type = field.type(module).type
 		i++
 		if (i>200)
 			throw new Error('data-moduler: got very nested'

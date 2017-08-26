@@ -159,10 +159,7 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 			if (rawModule) return action.type = fieldNormaliser({type: rawModule})
 
 			// consume return type
-			if (key == 'type') {
-				action.type = ()=> fieldNormaliser(field)
-				return
-			}
+			if (key == 'type') return action.type = field
 
 			// consume input type
 			// ie. input: {name: {STRING, allowNull}}, ...
@@ -186,6 +183,10 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 			// otherwise, assume it's supposed to be an action function
 			actionFields.push({ namespace: key, fn: field })
 		})
+
+		// handle return type
+		const savedType = action.type
+		action.type = ()=> fieldNormaliser(savedType)
 
 		// wrap actionFields
 		actionFields.forEach(wrapActionField)

@@ -190,8 +190,11 @@ const actionsFixer = ({module, fieldSectionName})=> {
 
 		// from graphql: (root, args, req, {rootValue})
 		// eslint-disable-next-line
-		ac.resolve = (parent, args, req, {rootValue})=> action[namespace]
-			.native({parent, args, req, rootValue})
+		ac.resolve = (parent, args, req, {rootValue})=> {
+			const fn = action[namespace]
+			const self = args
+			return (action.isStatic? fn: fn(self)).native({parent, args, req, rootValue})
+		}
 	})
 	
 	return fixed
