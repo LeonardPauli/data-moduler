@@ -91,6 +91,16 @@ const crud = {
 
 		delete: ()=> ({store, module, self})=>
 			store.collections[module.name].removeDocument(self),
+
+		update: ()=> ({store, module, self}, input)=> {
+			const doc = store.collections[module.name]
+				.documents.find(d=> d.id == self.id)
+			Object.keys(input).forEach(k=> {
+				if (input[k]===undefined || k=='id') return
+				doc[k] = input[k]
+			})
+			return doc
+		},
 	},
 }
 

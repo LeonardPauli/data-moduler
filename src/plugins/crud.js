@@ -56,11 +56,12 @@ const initialiseModule = moduler=> module=> {
 		},
 	}
 
-	// mutations.update = {
-	// 	input: {name: STRING},
-	// 	[namespace]: ({module, self}, input)=>
-	// 		Object.assign(module.getters.load[namespace](self)(), input),
-	// }
+	mutations.update = { SELF,
+		input: ()=> ({
+			id: ID,
+			item: {SELF, onlyNew},
+		}),
+	}
 
 	mutations.delete = {
 		input: ()=> ({id: ID}),

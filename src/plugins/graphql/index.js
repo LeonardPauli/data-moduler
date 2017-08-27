@@ -236,6 +236,10 @@ const crud = {
 			const {thisAction, self} = context
 			return thisAction[nextPlugin.namespace](self)(input, context)
 		},
+		update: ({nextPlugin})=> (context, input)=> {
+			const {thisAction, self} = context
+			return thisAction[nextPlugin.namespace](self)(input.item, context)
+		},
 	},
 }
 
