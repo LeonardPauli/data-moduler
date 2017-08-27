@@ -21,7 +21,7 @@ class Collection {
 	_lastId = 0
 	newId () {
 		this._lastId++
-		return this._lastId
+		return this._lastId+''
 	}
 
 	createDocument (doc) {
@@ -34,8 +34,9 @@ class Collection {
 		return doc
 	}
 	removeDocument (doc) {
-		this.documents = this.documents.filter(d=> d!==doc)
-		return doc
+		const oldLength = this.documents.length
+		this.documents = this.documents.filter(d=> d.id!==doc.id)
+		return this.documents.length != oldLength
 	}
 }
 class Store {
@@ -87,6 +88,9 @@ const crud = {
 					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
 				)
 			}),
+
+		delete: ()=> ({store, module, self})=>
+			store.collections[module.name].removeDocument(self),
 	},
 }
 

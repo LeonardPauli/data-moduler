@@ -39,7 +39,7 @@ const initialiseModule = moduler=> module=> {
 
 	getters.list = { isStatic,
 		comment: 'Has filter ability',
-		type: LIST.of(module),
+		type: LIST.of(SELF),
 		input: ()=> {
 			const obj = {}
 
@@ -62,12 +62,9 @@ const initialiseModule = moduler=> module=> {
 	// 		Object.assign(module.getters.load[namespace](self)(), input),
 	// }
 
-	// mutations.delete = {
-	// 	[namespace]: ({store, module, self})=> {
-	// 		const doc = module.getters.load[namespace](self)()
-	// 		return store.collections[module.name].removeDocument(doc)
-	// 	},
-	// }
+	mutations.delete = {
+		input: ()=> ({id: ID}),
+	}
 
 	// attach plugins
 	plugins.filter(v=> v[namespace]).forEach((plugin, i, filteredPlugins)=> {
@@ -81,10 +78,11 @@ const initialiseModule = moduler=> module=> {
 
 			const misc = {}
 			misc.nextPlugin = i>0 && filteredPlugins[i-1]
-			const resolver = pluginActions[actionName](misc)
+			const rawResolver = pluginActions[actionName]
+			if (!rawResolver) return
 			// resolver.middlewares = []
 
-			action[pluginNamespace] = resolver
+			action[pluginNamespace] = rawResolver(misc)
 		})
 		assign(mutations)
 		assign(getters)

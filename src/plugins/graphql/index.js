@@ -232,6 +232,10 @@ const crud = {
 			const {thisAction} = context
 			return thisAction[nextPlugin.namespace](input, context)
 		},
+		delete: ({nextPlugin})=> (context, input)=> {
+			const {thisAction, self} = context
+			return thisAction[nextPlugin.namespace](self)(input, context)
+		},
 	},
 }
 

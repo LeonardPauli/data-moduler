@@ -36,6 +36,8 @@ import {getFieldNormaliser} from './getFieldsNormaliser'
 const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 	const {plugins} = moduler
 	const {dataTypes, rawModules} = moduler
+	const {allowNull} = moduler.dataFlags
+	const {BOOLEAN} = dataTypes
 	const fieldNormaliser = getFieldNormaliser(moduler)(module)
 	const rawActions = module[fieldSectionName] = module[fieldSectionName] || {}
 	const actions = module[fieldSectionName] = {}
@@ -186,7 +188,7 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 
 		// handle return type
 		const savedType = action.type
-		action.type = ()=> fieldNormaliser(savedType)
+		action.type = ()=> fieldNormaliser(savedType || {BOOLEAN, allowNull})
 
 		// wrap actionFields
 		actionFields.forEach(wrapActionField)
