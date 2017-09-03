@@ -44,11 +44,11 @@ const User = {
 		Color,
 	},
 	fields: {
-		// lal: SELF,
+		lal: SELF,
 		name: STRING,
 		thing: Note,
-		// rang1: Color,
-		// rang2: {type: Color},
+		rang1: Color,
+		rang2: {type: Color},
 		title: { STRING, allowNull,
 			comment: '*ie.* CEO, or Happiness Hero',
 		},
@@ -91,8 +91,18 @@ Object.assign(Note, {
 	fields: {
 		text: STRING,
 		col: {Color, allowNull},
-		hello: {Note, allowNull},
-		// user: {User, onlyId},
+		// hello: {Note, allowNull},
+		// user: User,
+	},
+	getters: {
+		anUppercaseText: { STRING, isStatic,
+			input: ()=> ({}),
+			graphql: (context, input)=> 'HELLO',
+		},
+		uppercaseText: { STRING,
+			input: ()=> ({}),
+			graphql: ({self})=> self.text.toUpperCase(),
+		},
 	},
 	// mutations: {
 	// 	set: {

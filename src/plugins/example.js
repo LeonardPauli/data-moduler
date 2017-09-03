@@ -50,7 +50,7 @@ const typeReducer = module=> {
 
 
 // afterTypeSetup
-const afterTypeSetup = module=> {
+const afterTypeSetup = _moduler=> module=> {
 	module[namespace].myCustomField = typeof module.type[namespace]
 }
 

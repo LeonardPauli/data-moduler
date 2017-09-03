@@ -80,19 +80,20 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 			...fields,
 		}
 
-		const native = (input={})=> wrapper.wrapper({context: {
+		const native = (input={}, ctx={})=> wrapper.wrapper({context: {
 			...input, // could be risky, if trying to
 				// access a prop not defined, but sent from client
 			...betweenInput,
 			input, // first + keep input to avoid override issue (ie if input.module)
 			...afterInput,
+			...ctx,
 		}, fn})
 
 		const normalised = (rawInput, context={})=> {
 			const ctx = {
-				...context,
 				...betweenInput,
 				...afterInput,
+				...context,
 			}
 			// Object.assign({}, defaultContext, context) to allow passing partial context?
 			const input = wrapper.inputNormaliser(rawInput, ctx)

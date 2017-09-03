@@ -10,7 +10,7 @@ const initialiseModule = moduler=> module=> {
 
 	const {plugins} = moduler
 	const {isStatic, allowNull, onlyNew} = moduler.dataFlags
-	const {STRING, MODULE, LIST, ID, SELF, OBJECT} = moduler.dataTypes
+	const {LIST, ID, SELF, OBJECT} = moduler.dataTypes
 
 
 	// setup default entity fields
@@ -25,14 +25,15 @@ const initialiseModule = moduler=> module=> {
 	const mutations = {}
 	const getters = {}
 
-	mutations.create = { SELF, isStatic,
+	mutations.create = { isStatic,
+		type: {SELF, allowNull},
 		returnTypeDescription: 'If ok or not',
 		input: ()=> ({
 			item: {SELF, onlyNew},
 		}),
 	}
 
-	getters.load = {
+	getters.load = { isStatic,
 		type: {SELF, allowNull},
 		input: ()=> ({id: ID}),
 	}
@@ -56,14 +57,15 @@ const initialiseModule = moduler=> module=> {
 		},
 	}
 
-	mutations.update = { SELF,
+	mutations.update = { isStatic,
+		type: {SELF, allowNull},
 		input: ()=> ({
 			id: ID,
 			item: {SELF, onlyNew},
 		}),
 	}
 
-	mutations.delete = {
+	mutations.delete = { isStatic,
 		input: ()=> ({id: ID}),
 	}
 

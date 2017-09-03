@@ -50,11 +50,12 @@ const dataTypes = {
 
 
 // typeReducer, (module)
-const typeReducer = ({
-	name,
-	description,
-	fields,
-})=> {
+const typeReducer = module=> {
+	const {
+		name,
+		description,
+		fields,
+	} = module
 	const type = {}
 	const input = {}
 
@@ -102,6 +103,10 @@ const typeReducer = ({
 						// ({hex: "SJSJ", id:1212}) // TODO: load child
 			}
 		})
+
+		Object.assign(rawFields, actionsFixer({
+			isStatic: false, module, fieldSectionName}))
+
 		return rawFields
 	}
 
@@ -138,6 +143,8 @@ const typeReducer = ({
 	// })
 
 	// ie. objectType.getReferenceInputType({onlyId: true}) -> objectType._idInput
+	// TODO: if query is "query type" and not "mutation",
+	// create/onlyNew option should not be available
 	const getGetReferenceInputType = objectType=> ({ onlyId, onlyNew }={})=> {
 		const inputType = objectType._input
 		const idType = objectType._idInput
@@ -161,15 +168,17 @@ const typeReducer = ({
 
 
 // actionsFixer
-const actionsFixer = ({module, fieldSectionName})=> {
+const actionsFixer = ({_moduler, module, fieldSectionName, isStatic})=> {
 	// const {graphql: {type}} = module
 	const actions = module[fieldSectionName]
 	const fixed = {}
-
+	if (!actions) return {}
+	
 	Object.keys(actions).forEach(actionName=> {
 		const action = actions[actionName]
 		const ignore = action.ignore && action.ignore({namespace, fieldSectionName})
 		if (ignore) return
+		if (action.isStatic != isStatic) return
 
 		const ac = fixed[actionName] = {}
 		
@@ -207,14 +216,26 @@ const actionsFixer = ({module, fieldSectionName})=> {
 		}
 	})
 	
+	// const {dataTypes: {MODULE}} = moduler
+	// const modules = module.modules || {}
+	// Object.keys(modules).forEach(k=> {
+	// 	const rawModule = modules[k]
+	// 	const field = fixed[k] = Object.assign({}, fixed[k])
+	// 	field.type = MODULE.of(rawModule).type.getReferenceInputType({})
+	// })
+
+	// console.dir({d:module.name, fixed})
 	return fixed
 }
 
 
 // afterTypeSetup
-const afterTypeSetup = module=> {
-	module[namespace].getters 	= actionsFixer({module, fieldSectionName: 'getters'})
-	module[namespace].mutations = actionsFixer({module, fieldSectionName: 'mutations'})
+const afterTypeSetup = moduler=> module=> {
+	const isStatic = true
+	module[namespace].getters 	= actionsFixer({
+		isStatic, moduler, module, fieldSectionName: 'getters'})
+	module[namespace].mutations = actionsFixer({
+		isStatic, moduler, module, fieldSectionName: 'mutations'})
 }
 
 
@@ -222,23 +243,26 @@ const crud = {
 	actions: {
 		create: ({nextPlugin})=> (context, input)=> {
 			const {thisAction} = context
-			return thisAction[nextPlugin.namespace](input.item, context)
+			return thisAction[nextPlugin.namespace](input.item)
 		},
 		load: ({nextPlugin})=> (context, input)=> {
-			const {thisAction, self} = context
-			return thisAction[nextPlugin.namespace](self)(input, context)
+			const {thisAction} = context
+			const self = {id: input.id}
+			return thisAction[nextPlugin.namespace](input, {self})
 		},
 		list: ({nextPlugin})=> (context, input)=> {
 			const {thisAction} = context
-			return thisAction[nextPlugin.namespace](input, context)
+			return thisAction[nextPlugin.namespace](input)
 		},
 		delete: ({nextPlugin})=> (context, input)=> {
-			const {thisAction, self} = context
-			return thisAction[nextPlugin.namespace](self)(input, context)
+			const {thisAction} = context
+			const self = {id: input.id}
+			return thisAction[nextPlugin.namespace](input, {self})
 		},
 		update: ({nextPlugin})=> (context, input)=> {
-			const {thisAction, self} = context
-			return thisAction[nextPlugin.namespace](self)(input.item, context)
+			const {thisAction} = context
+			const self = {id: input.id}
+			return thisAction[nextPlugin.namespace](input.item, {self})
 		},
 	},
 }
@@ -296,7 +320,8 @@ const actionsWrapper = ({context, fn})=> {
 
 	return fn({
 		...context,
-		//store: context.moduler[namespace].store,
+		// store: context.moduler[namespace].store,
+		self: context.parent, // TODO; only do this if set to isStatic:false?
 	}, {
 		...context.input.args,
 		item: fieldsSerializer(context.input.args.item),

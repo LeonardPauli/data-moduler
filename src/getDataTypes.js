@@ -47,11 +47,20 @@ const moduleTypeUnwrapper = _moduler=> module=> {
 }
 
 const objectTypeCreator = moduler=> (fields, name)=> module=> {
+	// TODO: Run through moduler instead?
+	// ie. should OBJECT.of just create a simpler module, only with fields+name,
+	// or, an intermidiate (not registered) full-featured module?
+	// I like the latter (more streamlined), which would propably use moduler.parse
+	// although, in many cases, the use is for JsonB, or similar... thereby the invocation of
+	// plugins.dataTypes.OBJECT.typeReducer, but think it's better solved with a flag for the
+	// usual typeReducer or similar.
+
 	const fieldNormaliser = getFieldNormaliser(moduler)(module)
 	const {plugins} = moduler
 	const type = {
 		name: module.name+(name || 'Object'),
 		fields: {},
+		_isOBJECT: true,
 	}
 	Object.keys(fields).forEach(k=> {
 		type.fields[k] = fieldNormaliser(fields[k])

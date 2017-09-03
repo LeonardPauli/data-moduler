@@ -124,7 +124,7 @@ export default class ModuleParser {
 		
 		
 		// plugins
-		plugins.map(m=> m.afterTypeSetup).filter(v=> v).forEach(f=> f(module))
+		plugins.map(m=> m.afterTypeSetup).filter(v=> v).forEach(f=> f(this)(module))
 		// plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(module))
 
 
