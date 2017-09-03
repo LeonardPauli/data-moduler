@@ -181,7 +181,8 @@ const actionsFixer = ({_moduler, module, fieldSectionName, isStatic})=> {
 		if (action.isStatic != isStatic) return
 
 		const ac = fixed[actionName] = {}
-		
+		ac.description = action.comment
+
 		// add return type
 		// console.dir({action, type: action.type.type.type.type}, {depth:3, colors:1})
 		// TODO; that's way to many 'type'... RIGHT, it's because of that MODULE.of code..
@@ -189,7 +190,7 @@ const actionsFixer = ({_moduler, module, fieldSectionName, isStatic})=> {
 				// ie. action.type: STRING || {STRING, allowNull} || {type: STRING, allowNull: true}
 			.type[namespace] // action.type.type (ie. not .allowNull), then .graphql to get the actual type
 		) || GraphQLBoolean // needs a type
-		
+
 		if (!action.type.allowNull[fieldSectionName])
 			ac.type = new GraphQLNonNull(ac.type)
 
@@ -360,5 +361,11 @@ export default function GraphQLPlugin (defaults) {
 		moduleHelpers,
 
 		crud,
+
+		documentation: {
+			title: 'graphql - API Exposer with a graph query language',
+			description: 'ie. instead of REST API. Supports CRUD plugin.'
+			+' See localhost/graphql if [GraphiQL](https://github.com/graphql/graphiql) is enabled.',
+		},
 	}
 }

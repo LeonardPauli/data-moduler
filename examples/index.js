@@ -13,10 +13,10 @@ import baseModule, {moduler} from './just-markdown'
 
 
 // Markdown (export API documentation using baseModule)
-// baseModule.markdown.writeFile({
-// 	outputFile: `${__dirname}/api-documentation.md`,
-// 	includedPluginDescriptions: moduler.plugins,
-// })
+baseModule.markdown.writeFile({
+	outputFile: `${__dirname}/api-documentation.md`,
+	includedPluginDescriptions: moduler.plugins,
+})
 
 const store = new moduler.tmpstore.Store()
 moduler.tmpstore.store = store // for CRUD actions

@@ -160,7 +160,7 @@ export default function TmpStorePlugin (defaults) {
 			title: 'tmpstore - Temporary storage (caching)',
 			description: 'By saving all data on the heap, native to JavaScript, this store becomes very'
 			+ ' fast - until it exceeds the available RAM - or restarts, which inherently removes'
-			+ ' all the data.',
+			+ ' all the data. Supports CRUD plugin.',
 		},
 	}
 }

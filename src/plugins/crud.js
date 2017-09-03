@@ -100,6 +100,18 @@ export default function CrudPlugin (_defaults) {
 	return {
 		namespace,
 		initialiseModule,
+
+		documentation: {
+			title: 'crud - Auto-add CRUD actions',
+			description: 'CRUD stands for Create, Read, Update, and Delete. In this'
+			+' case, it adds default mutations (create, update, delete) and getters'
+			+' (load, list), together with a hook for other plugins to provide their'
+			+' own default CRUD actions in a standardized way. This makes it possible'
+			+' to automatically chain multiple plugins. Ie. if one store plugin is added,'
+			+' then a validation plugin, followed by an API exposer (ie rest/graphql),'
+			+' followed by the crud plugin, calling create on the API will automatically'
+			+' first validate the input, and then call create on the store.',
+		},
 	}
 }
 

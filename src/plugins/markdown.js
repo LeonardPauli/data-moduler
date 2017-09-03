@@ -47,10 +47,25 @@ const mdLink = (text, link)=> link
 	?	`[${text}](${link})`
 	: text
 
-const mdTypeLink = field=> mdLink(
-	field.type.name,
-	field.type.documentationURL)+(field.allowNull.default? '?': '' // TODO: allowNull is different
-)
+const getTypeName = type=> {
+	const formatterWrapper = (type, formatter=(t=> t))=> {
+		const suffix = type.allowNull && type.allowNull.default?'?':'' // TODO: allowNull is different
+		return {type, formatter: (text=type.name)=> formatter(text)+suffix}
+	}
+	if (type.markdown) return {type, formatter: ()=> type.markdown.title}
+	if (type.isList) {
+		const {type: innerType, formatter} = getTypeName(type.ofType)
+		return formatterWrapper(innerType, text=> `[${formatter(text)}]`)
+	}
+	if (type._module) return formatterWrapper(type._module)
+	return formatterWrapper(type)
+}
+
+const mdTypeLink = field=> {
+	// console.dir({ft: field.type}) ||
+	const {type, formatter} = getTypeName(field.type)
+	return formatter(mdLink(type.name, type.documentationURL))
+}
 
 const tableFromRows = rows=> {
 	const headerRowsCount = 1
@@ -91,7 +106,7 @@ const getAddActionsGroup = doc=> (title, actions)=> {
 		const returnType = type
 			? `: ${mdTypeLink(type)}`
 			: ''
-		const mdStatic = !isStatic?'': ' *static*'
+		const mdStatic = isStatic?'': ' *non-static*'
 
 		const inputNames = input? Object.keys(input): []
 		

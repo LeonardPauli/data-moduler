@@ -9,7 +9,7 @@ export const moduler = new DataModuler({
 		tmpstore(),
 		crud(),
 		graphql(),
-		// markdown(),
+		markdown(),
 	],
 })
 
@@ -86,13 +86,13 @@ const User = {
 Object.assign(Note, {
 	comment: '*Tips:* Write one note every day in the morning',
 	modules: {
-		Color,
+		// Color,
 	},
 	fields: {
 		text: STRING,
 		col: {Color, allowNull},
 		// hello: {Note, allowNull},
-		// user: User,
+		user: User,
 	},
 	getters: {
 		anUppercaseText: { STRING, isStatic,
@@ -139,7 +139,7 @@ const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {Note},
+	modules: {User, Note},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule

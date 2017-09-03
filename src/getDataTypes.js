@@ -18,6 +18,7 @@ const getListOf = moduler=> type=> module=> {
 	})
 
 	newType.isList = true
+	newType.ofType = innerType
 	return {type: newType}
 }
 
