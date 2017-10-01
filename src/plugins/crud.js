@@ -1,3 +1,5 @@
+import {log} from '../stringFromObject'
+
 // namespace
 const namespace = 'crud'
 
@@ -91,8 +93,27 @@ const initialiseModule = moduler=> module=> {
 
 
 const afterFieldsNormalisation = moduler=> module=> {
-	if (module.filterType) return
-	module.filterType = module.filterType || getFilterType(moduler)(module)
+	if (!module.filterType)
+		module.filterType = module.filterType || getFilterType(moduler)(module)
+
+	// bi-directional relations setup
+	const {LIST} = moduler.dataTypes
+	Object.keys(module.fields).forEach(fieldName=> {
+		const field = module.fields[fieldName]
+		//log(field)
+		// log(field, 3)
+		const targetModule = field.type._module
+		if (!targetModule || !field.targetField) return
+		if (targetModule.getters[field.targetField]) return
+
+		targetModule.getters[field.targetField] = {
+			// default: (ctx, input)=> ctx.module.Comment.list(ctx, input),
+			graphql: (ctx, _input)=> module.list.graphql({q: {[fieldName]: {id: ctx.self.id}}}),
+			type: ()=> LIST.of(module),
+			input: ()=> ({})
+		}
+	})
+
 }
 
 const getFilterType = moduler=> module=> {

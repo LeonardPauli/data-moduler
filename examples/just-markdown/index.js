@@ -142,14 +142,14 @@ const Post = {
 		text: STRING,
 		// date: DATE,
 	},
-	getters: {
-		comments: {
-			// default: (ctx, input)=> ctx.module.Comment.list(ctx, input),
-			graphql: (ctx, _input)=> [{a:'hello'}, {a:'s'}],//Comment._module.list.graphql({q: {post: {id: 1}}}),
-			type: LIST.of(Comment),
-			// graphql: (ctx, input)=> console.dir({a: 1, ctx, input}, {colors:1, depth: 2}),
-		},
-	},
+	// getters: {
+	// 	comments: {
+	// 		// default: (ctx, input)=> ctx.module.Comment.list(ctx, input),
+	// 		graphql: (ctx, _input)=> ctx.modules.Comment.list.graphql({q: {post: {id: ctx.self.id}}}),
+	// 		type: LIST.of(Comment),
+	// 		// graphql: (ctx, input)=> console.dir({a: 1, ctx, input}, {colors:1, depth: 2}),
+	// 	},
+	// },
 }
 
 Object.assign(Comment, {
@@ -158,7 +158,6 @@ Object.assign(Comment, {
 		post: {Post, targetField: 'comments'},
 	},
 })
-
 
 
 // Parse the base module (including all the models)

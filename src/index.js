@@ -94,7 +94,7 @@ export default class ModuleParser {
 
 		// init, setup defaults, plugins.initialiseModule, metaNormaliser, etc
 		const module = alreadyInitialized? rawModule: moduleInitialiser(rawModule)
-		
+		module.__isParsed = false
 		// // prevent infinite loop parsing
 		// if (module._hasStartedParsing) return
 		// module._hasStartedParsing = true
@@ -190,6 +190,7 @@ export default class ModuleParser {
 			steps.some(fn=> fn())
 		}
 
+		module.__isParsed = module.__lastParsedStep>=steps.length-1
 		return module
 	}
 

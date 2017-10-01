@@ -272,7 +272,9 @@ const typeReducer = module=> {
 		type.actions = null
 
 	// expose processed-type to markdown-string function
-	type.toString = getModuleMDTypeToMDString(type)
+	type.toString = !module.__isParsed
+		? ()=> '...module not yet parsed...'
+		: getModuleMDTypeToMDString(type)
 	
 	return type
 }

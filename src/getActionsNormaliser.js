@@ -74,8 +74,11 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 			...actions, actions,
 			thisAction: actions[actionName],
 		}
+		const modules = {}
+		Object.keys(moduler.rawModules).forEach(k=>
+			(modules[k] = moduler.rawModules[k]._module))
 		const afterInput = {
-			moduler, module,
+			moduler, module, modules,
 			fieldSectionName, actionName,
 			...fields,
 		}
