@@ -45,6 +45,8 @@ ie. instead of REST API. Supports CRUD plugin. See localhost/graphql if [GraphiQ
 
 ###### Getters
 
+- __comments__: BOOLEAN *non-static*
+
 - __load__: Post
   > **id:** ID
 
@@ -60,8 +62,8 @@ ie. instead of REST API. Supports CRUD plugin. See localhost/graphql if [GraphiQ
 
 | Field | Type   | Comment |
 |-------|--------|---------|
-| post  | Post   |         |
 | text  | STRING |         |
+| post  | Post   |         |
 | id    | ID     |         |
 
 #### Actions

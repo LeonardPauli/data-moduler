@@ -15,7 +15,7 @@ export const moduler = new DataModuler({
 
 // Define the modules (User, Note)
 const { allowNull, isStatic, onlyId } = moduler.dataFlags
-const { STRING, BOOLEAN, INT, SELF } = moduler.dataTypes
+const { STRING, BOOLEAN, INT, SELF, DATE } = moduler.dataTypes
 
 /*
 const Color= {
@@ -136,28 +136,28 @@ Object.assign(Note, {
 })
 */
 
+const Comment = {}
 const Post = {
 	fields: {
 		text: STRING,
-		// comments: {
-		// 	type: LIST.of(Comment),
-		// }
+		// date: DATE,
+	},
+	getters: {
+		comments: {
+			// default: (ctx, input)=> ctx.module.Comment.list(ctx, input),
+			// graphql: (ctx, input)=> ctx.module.Comment.list.graphql(ctx, input),
+			// graphql: (ctx, input)=> console.dir({a: 1, ctx, input}, {colors:1, depth: 2}),
+		},
 	},
 }
 
-const Comment = {
+Object.assign(Comment, {
 	fields: {
-		post: Post, // doesn't auto create targetField
-		// post: {Post, targetField: 'comments'},
-		// post: {Post, targetField: {
-		// 	// ...sourceField, // delete Post, etc... hmm.. could be more complicated than solving
-		// 	// allowNull, comment, ...
-		// 	name: 'comments',
-		// 	type: LIST.of(Comment), // SELF?
-		// }},
 		text: STRING,
+		post: {Post, targetField: 'comments'},
 	},
-}
+})
+
 
 
 // Parse the base module (including all the models)

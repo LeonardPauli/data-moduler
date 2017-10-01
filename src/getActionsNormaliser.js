@@ -107,12 +107,17 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 	// repackage rawActions to actions
 	Object.keys(rawActions).forEach(actionName=> {
 		const rawAction = rawActions[actionName]
-		const action = actions[actionName] = {
+		const tmp = {}
+		const action = tmp.action = actions[actionName] = (a, b, c)=>
+			tmp.action.default? tmp.action.default(a, b, c):
+			console.warn(`No default function defined for ${module.name}.${actionName}`)
+
+		Object.assign(action, {
 			rawActions: {},
 			isStatic: false,
 			type: null,
 			input: null,
-		}
+		})
 
 
 		// wrapActionField function
@@ -131,10 +136,22 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 		}
 
 
+		const wrapActionFields = fields=> {
+			const defaultField = fields.find(({namespace})=> namespace=='default')
+
+			// fill in for non-provided plugin functions
+			if (defaultField) Object.keys(wrappers).forEach(namespace=> {
+				if (fields.find(o=> o.namespace==namespace)) return
+				actionFields.push({ namespace, fn: defaultField.fn })
+			})
+
+			actionFields.forEach(wrapActionField)
+		}
+
 		// ie. actions: { doThing: context=> ... }
 		// usefull if only one platform is used
 		if (typeof rawAction === 'function') {
-			wrapActionField({ namespace: 'default', fn: rawAction })
+			wrapActionFields([{ namespace: 'default', fn: rawAction }])
 			return
 		}
 
@@ -143,6 +160,8 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 			`data-moduler; actionNormaliser; ${module.name}.actions.${actionName}; `
 				+` expected object or function, got ${typeof rawAction}`)
 
+
+		if (!rawAction.input) rawAction.input = ()=> ({})
 
 		// parse action object
 		// { type: ..., input: ..., pluginNamespace: (pluginsWrapperContext)=> ..., ... }
@@ -192,7 +211,7 @@ const getActionsNormaliser = moduler=> module=> fieldSectionName=> {
 		action.type = ()=> fieldNormaliser(savedType || {BOOLEAN, allowNull})
 
 		// wrap actionFields
-		actionFields.forEach(wrapActionField)
+		wrapActionFields(actionFields)
 	})
 }
 

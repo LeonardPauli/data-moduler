@@ -318,25 +318,21 @@ const fieldSerializer = ({data, module, context})=> {
 
 const actionsWrapper = ({context, fn})=> {
 	const {fieldSectionName} = context
-	if (fieldSectionName!='mutations')
-		return fn(context, context.input.args)
-
-	// TODO: look over this
-	const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
-	const item = fieldsSerializer(context.input.args.item)
 
 	const ctx = {...context}
-	// store: context.moduler[namespace].store,
+	const input = {...context.input.args}
+
 	// TODO; only do this if set to isStatic:false?
-	if (context.parent) {
-		ctx.self = context.parent
-		// console.warn(`got context.parent ${context.parent}`)
+	if (context.parent) ctx.self = context.parent
+
+	// TODO: look over this
+	if (fieldSectionName=='mutations') {
+		const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
+		const item = fieldsSerializer(context.input.args.item)
+		if (item) input.item = item
 	}
 
-	return fn(ctx, {
-		...context.input.args,
-		item,
-	})
+	return fn(ctx, input)
 }
 
 const actionsInputNormaliser = (input, context)=> {

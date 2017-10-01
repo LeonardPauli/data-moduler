@@ -140,7 +140,7 @@ module.exports = {
     'no-catch-shadow': 'error',
     'no-compare-neg-zero': 'error',
     'no-confusing-arrow': 'off', // solved by arrow-spacing fn=> ...
-    'no-console': 'warn',
+    'no-console': ['warn', {allow: ['warn', 'error']}],
     'no-continue': 'off',
     'no-div-regex': 'error',
     'no-duplicate-imports': 'error',
@@ -267,7 +267,7 @@ module.exports = {
     'prefer-spread': 'error',
     'prefer-template': 'off', // want it, but too intrusive
     'quote-props': ["error", "as-needed", { "numbers": true }],
-    'quotes': ['error', 'single'],
+    'quotes': ['error', 'single', {allowTemplateLiterals: true}],
     'radix': 'error',
     'require-await': 'off', // nope, better to write async ()=> x than ()=> Promise.resolve(x), etc
     'require-jsdoc': ['warn', {require: {

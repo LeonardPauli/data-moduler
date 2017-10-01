@@ -260,7 +260,8 @@ const typeReducer = module=> {
 			}),
 		],
 
-		modules: modules && Object.keys(modules).map(k=> modules[k]).map(m=> m.type[namespace]),
+		modules: modules && Object.keys(modules)
+			.map(k=> modules[k]).map(m=> m.type[namespace]).filter(f=> f),
 	}
 
 	type.actions = {

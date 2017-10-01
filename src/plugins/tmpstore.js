@@ -59,8 +59,11 @@ const attach = defaults=> (module, options={})=> {
 	const {store} = opt
 
 	// setup module + submodules
+	const taken = []
 	const walk = modules=> modules && Object.keys(modules).forEach(key=> {
 		const module = modules[key]
+		if (taken.indexOf(module)>=0) return
+		taken.push(module)
 		if (module.isEntity)
 			store.createCollection(module.name)
 		walk(module.modules)

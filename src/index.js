@@ -81,7 +81,11 @@ export default class ModuleParser {
 	}
 
 	// parse one (raw base module)
-	parse (rawModule, {alreadyInitialized}={}) {
+	parse (rawModule, {
+		alreadyInitialized,
+		stopAfterFieldNormalization = false,
+		startAfterFieldNormalization = false,
+	}={}) {
 		const {plugins} = this
 		const {
 			moduleInitialiser,
@@ -91,13 +95,35 @@ export default class ModuleParser {
 
 		// init, setup defaults, plugins.initialiseModule, metaNormaliser, etc
 		const module = alreadyInitialized? rawModule: moduleInitialiser(rawModule)
-		
-		// sub modules - should already be initialised in moduleInitialiser
-		if (module.modules)
-			module.modules = this.parseMany(module.modules, {alreadyInitialized: true})
 
-		// fields
-		module.fields = fieldsNormaliser(module)
+		if (!startAfterFieldNormalization) {
+			// prevent infinite loop parsing
+			if (module._hasStartedParsing) return module
+			module._hasStartedParsing = true
+
+			// sub modules - should already be initialised in moduleInitialiser
+			if (module.modules)
+				module.modules = this.parseMany(module.modules, {
+					alreadyInitialized: true, stopAfterFieldNormalization: true})
+
+			// fields
+			module.fields = fieldsNormaliser(module)
+			if (stopAfterFieldNormalization) return module
+		}
+
+		// prevent infinite loop parsing
+		if (module._hasStartedParsingAfterFieldNormalization) return module
+		module._hasStartedParsingAfterFieldNormalization = true
+
+		// sub modules - should already be initialised + fieldNormalized
+		if (module.modules)
+			module.modules = this.parseMany(module.modules, {
+				alreadyInitialized: true,
+				startAfterFieldNormalization: true,
+			})
+
+		// plugins
+		plugins.map(m=> m.afterFieldsNormalisation).filter(v=> v).forEach(f=> f(this)(module))
 
 		// actions, getters
 		// all action.type/.input is functions for later evaluation
@@ -140,19 +166,48 @@ export default class ModuleParser {
 				})
 			})
 
+		// for convenience; add fields, modules, and actions straight to module
+		// if naming conflict (ie, if using a field "name" or "type", module.fields.name  )
+		const moduleInsides = {...module}
+		Object.assign(module,
+			module.fields, module.mutations,
+			module.getters, module.modules,
+			moduleInsides
+		)
+
 		return module
 	}
 
 	// initialise many, recursively
 	initialiseMany (rawModules) {
 		const {moduleInitialiser} = this
+		const {rawModules: registeredRawModules} = this
 
 		// first, recursively initialize all modules
 		const modules = {}
 		Object.keys(rawModules).forEach(moduleName=> {
 			const rawModule = rawModules[moduleName]
 			rawModule.name = rawModule.name || moduleName
-			const module = moduleInitialiser(rawModule)
+
+			const alreadyRegisteredModule = registeredRawModules[rawModule.name]
+			if (!alreadyRegisteredModule) {
+				const module = moduleInitialiser(rawModule)
+				modules[module.name] = module
+				return
+			}
+
+			if (alreadyRegisteredModule!=rawModule) {
+				console.error(`DataModuler: a different module named ${rawModule.name} has `
+					+`already been registered, use different name or make sure they're the same. `
+					+`\n\nregistered: ${Object.keys(alreadyRegisteredModule)}`
+					+`\nfields: ${Object.keys(alreadyRegisteredModule.fields)}`
+					+`\n\ntried to register: ${Object.keys(rawModule)}`
+					+`\nfields: ${Object.keys(rawModule.fields)}`
+				)
+				return
+			}
+
+			const module = alreadyRegisteredModule._module
 			modules[module.name] = module
 		})
 
@@ -160,7 +215,11 @@ export default class ModuleParser {
 	}
 
 	// parse many
-	parseMany (rawModules, {alreadyInitialized}={}) {
+	parseMany (rawModules, {
+		alreadyInitialized,
+		stopAfterFieldNormalization,
+		startAfterFieldNormalization,
+	}={}) {
 		const {initialiseMany} = this
 
 		// first, recursively initialize all modules
@@ -172,7 +231,11 @@ export default class ModuleParser {
 		const modules = {}
 		Object.keys(initialisedModules).forEach(k=> {
 			const initialised = initialisedModules[k]
-			modules[k] = this.parse(initialised, {alreadyInitialized: true})
+			modules[k] = this.parse(initialised, {
+				alreadyInitialized: true,
+				stopAfterFieldNormalization,
+				startAfterFieldNormalization,
+			})
 		})
 
 		// return parsed modules

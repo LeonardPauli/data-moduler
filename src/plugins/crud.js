@@ -10,7 +10,7 @@ const initialiseModule = moduler=> module=> {
 
 	const {plugins} = moduler
 	const {isStatic, allowNull, onlyNew} = moduler.dataFlags
-	const {LIST, ID, SELF, OBJECT} = moduler.dataTypes
+	const {LIST, ID, SELF} = moduler.dataTypes
 
 
 	// setup default entity fields
@@ -44,14 +44,8 @@ const initialiseModule = moduler=> module=> {
 		input: ()=> {
 			const obj = {}
 
-			const filters = {}
-			Object.keys(module.fields).forEach(name=> {
-				const field = module.fields[name]
-				if (field.type._module) return
-				filters[name] = {...field.type, allowNull}
-			})
-			if (Object.keys(filters).length)
-				obj.q = {type: OBJECT.of(filters, 'Filter'), allowNull}
+			if (module.filterType)
+				obj.q = module.filterType
 
 			return obj
 		},
@@ -96,10 +90,41 @@ const initialiseModule = moduler=> module=> {
 }
 
 
+const afterFieldsNormalisation = moduler=> module=> {
+	if (module.filterType) return
+	module.filterType = module.filterType || getFilterType(moduler)(module)
+}
+
+const getFilterType = moduler=> module=> {
+	const {allowNull} = moduler.dataFlags
+	const {OBJECT} = moduler.dataTypes
+
+	const filters = {}
+	Object.keys(module.fields).forEach(name=> {
+		const field = module.fields[name]
+
+		if (field.type._module) {
+			// if (!field.type._module.filterType) {
+			// 	console.warn(`no filterType defined on ${field.type._module.name}`)
+			// 	return
+			// }
+			// return filters[name] = field.type._module.filterType
+			return
+		}
+
+		filters[name] = {...field.type, allowNull}
+	})
+	
+	return Object.keys(filters).length
+		&& {type: OBJECT.of(filters, 'Filter'), allowNull}
+}
+
+
 export default function CrudPlugin (_defaults) {
 	return {
 		namespace,
 		initialiseModule,
+		afterFieldsNormalisation,
 
 		documentation: {
 			title: 'crud - Auto-add CRUD actions',
