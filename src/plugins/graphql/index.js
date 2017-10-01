@@ -67,6 +67,7 @@ const typeReducer = module=> {
 	
 	const getFields = (isInput, rawFields={})=> ()=> {
 		const fieldSectionName = isInput? 'mutations': 'getters'
+
 		Object.keys(fields).forEach(fieldName=> {
 			const field = fields[fieldName]
 			const ignore = field.ignore && field.ignore({namespace, fieldSectionName})

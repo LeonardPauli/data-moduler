@@ -83,8 +83,7 @@ export default class ModuleParser {
 	// parse one (raw base module)
 	parse (rawModule, {
 		alreadyInitialized,
-		stopAfterFieldNormalization = false,
-		startAfterFieldNormalization = false,
+		onlyOneStep,
 	}={}) {
 		const {plugins} = this
 		const {
@@ -95,85 +94,101 @@ export default class ModuleParser {
 
 		// init, setup defaults, plugins.initialiseModule, metaNormaliser, etc
 		const module = alreadyInitialized? rawModule: moduleInitialiser(rawModule)
+		
+		// // prevent infinite loop parsing
+		// if (module._hasStartedParsing) return
+		// module._hasStartedParsing = true
 
-		if (!startAfterFieldNormalization) {
-			// prevent infinite loop parsing
-			if (module._hasStartedParsing) return module
-			module._hasStartedParsing = true
+		const steps = [
+			()=> { // stepFields
+				// sub modules - should already be initialised in moduleInitialiser
+				if (module.modules)
+					module.modules = this.parseMany(module.modules, {
+						alreadyInitialized: true,
+						onlyOneStep: 0,
+					})
 
-			// sub modules - should already be initialised in moduleInitialiser
-			if (module.modules)
-				module.modules = this.parseMany(module.modules, {
-					alreadyInitialized: true, stopAfterFieldNormalization: true})
+				// fields
+				module.fields = fieldsNormaliser(module)
+			},
+			()=> { // stepType
+				// plugins
+				plugins.map(m=> m.afterFieldsNormalisation).filter(v=> v).forEach(f=> f(this)(module))
 
-			// fields
-			module.fields = fieldsNormaliser(module)
-			if (stopAfterFieldNormalization) return module
-		}
+				// actions, getters
+				// all action.type/.input is functions for later evaluation
+				const moduleActionsNormaliser = actionsNormaliser(module)
+				Object.assign(module, moduleActionsNormaliser('mutations'))
+				Object.assign(module, moduleActionsNormaliser('getters'))
+				
+				// set custom plugin type for module
+				plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>
+					module.type[namespace] = typeReducer(module))
 
-		// prevent infinite loop parsing
-		if (module._hasStartedParsingAfterFieldNormalization) return module
-		module._hasStartedParsingAfterFieldNormalization = true
+			},
+			()=> { // stepNext
 
-		// sub modules - should already be initialised + fieldNormalized
-		if (module.modules)
-			module.modules = this.parseMany(module.modules, {
+				// unwrap actions.type/input
+				const getActionTypesUnwrapper = module=> field=> {
+					const actions = module[field]
+					Object.keys(actions).forEach(k=> {
+						const action = actions[k]
+						action.type = action.type()
+						action.input = action.input()
+					})
+				}
+				const actionTypesUnwrapper = getActionTypesUnwrapper(module)
+				actionTypesUnwrapper('mutations')
+				actionTypesUnwrapper('getters')
+				
+				
+				// plugins
+				plugins.map(m=> m.afterTypeSetup).filter(v=> v).forEach(f=> f(this)(module))
+				// plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(module))
+
+
+				// attach plugin helpers
+				this.plugins.filter(p=> p.namespace && p.moduleHelpers)
+					.forEach(({namespace, moduleHelpers})=> {
+						if (!module[namespace]) module[namespace] = {}
+						Object.keys(moduleHelpers).forEach(name=> {
+							const field = moduleHelpers[name]
+							if (typeof field === 'function')
+								module[namespace][name] = field(module)
+							else module[namespace][name] = field
+						})
+					})
+
+				// for convenience; add fields, modules, and actions straight to module
+				// if naming conflict (ie, if using a field "name" or "type", module.fields.name  )
+				const moduleInsides = {...module}
+				Object.assign(module,
+					module.fields, module.mutations,
+					module.getters, module.modules,
+					moduleInsides
+				)
+			},
+		].map((fn, i)=> ()=> {
+			// prevent re-running step
+			if (typeof module.__lastParsedStep === 'number'
+				&& module.__lastParsedStep>=i) return
+			module.__lastParsedStep = i
+
+			// sub modules
+			if (module.modules) module.modules = this.parseMany(module.modules, {
 				alreadyInitialized: true,
-				startAfterFieldNormalization: true,
+				onlyOneStep: i,
 			})
 
-		// plugins
-		plugins.map(m=> m.afterFieldsNormalisation).filter(v=> v).forEach(f=> f(this)(module))
+			fn()
 
-		// actions, getters
-		// all action.type/.input is functions for later evaluation
-		const moduleActionsNormaliser = actionsNormaliser(module)
-		Object.assign(module, moduleActionsNormaliser('mutations'))
-		Object.assign(module, moduleActionsNormaliser('getters'))
-		
-		// set custom plugin type for module
-		plugins.filter(v=> v.typeReducer).forEach(({namespace, typeReducer})=>
-			module.type[namespace] = typeReducer(module))
+		})
 
-		// unwrap actions.type/input
-		const getActionTypesUnwrapper = module=> field=> {
-			const actions = module[field]
-			Object.keys(actions).forEach(k=> {
-				const action = actions[k]
-				action.type = action.type()
-				action.input = action.input()
-			})
+		if (typeof onlyOneStep === 'number') {
+			steps[onlyOneStep]()
+		} else {
+			steps.some(fn=> fn())
 		}
-		const actionTypesUnwrapper = getActionTypesUnwrapper(module)
-		actionTypesUnwrapper('mutations')
-		actionTypesUnwrapper('getters')
-		
-		
-		// plugins
-		plugins.map(m=> m.afterTypeSetup).filter(v=> v).forEach(f=> f(this)(module))
-		// plugins.map(m=> m.actionsGenerator).filter(v=> v).forEach(f=> f(module))
-
-
-		// attach plugin helpers
-		this.plugins.filter(p=> p.namespace && p.moduleHelpers)
-			.forEach(({namespace, moduleHelpers})=> {
-				if (!module[namespace]) module[namespace] = {}
-				Object.keys(moduleHelpers).forEach(name=> {
-					const field = moduleHelpers[name]
-					if (typeof field === 'function')
-						module[namespace][name] = field(module)
-					else module[namespace][name] = field
-				})
-			})
-
-		// for convenience; add fields, modules, and actions straight to module
-		// if naming conflict (ie, if using a field "name" or "type", module.fields.name  )
-		const moduleInsides = {...module}
-		Object.assign(module,
-			module.fields, module.mutations,
-			module.getters, module.modules,
-			moduleInsides
-		)
 
 		return module
 	}
@@ -217,8 +232,7 @@ export default class ModuleParser {
 	// parse many
 	parseMany (rawModules, {
 		alreadyInitialized,
-		stopAfterFieldNormalization,
-		startAfterFieldNormalization,
+		onlyOneStep,
 	}={}) {
 		const {initialiseMany} = this
 
@@ -233,8 +247,7 @@ export default class ModuleParser {
 			const initialised = initialisedModules[k]
 			modules[k] = this.parse(initialised, {
 				alreadyInitialized: true,
-				stopAfterFieldNormalization,
-				startAfterFieldNormalization,
+				onlyOneStep,
 			})
 		})
 

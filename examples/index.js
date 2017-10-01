@@ -24,10 +24,12 @@ baseModule.tmpstore.attach({store})
 // log(baseModule, 7)
 // log(baseModule.modules, 10)
 
-const {Post, Comment} = baseModule.modules
-const p = Post.mutations.create.graphql({item: {text: 'My first post'}})
-Comment.mutations.create.graphql({item: { text: 'nice one!', post: p}})
-Comment.mutations.create.graphql({item: { text: 'very cool', post: p}})
+const {Post, Comment} = baseModule
+const p = Post.create.graphql({item: {text: 'My first post'}})
+Comment.create.graphql({item: { text: 'nice one!', post: p}})
+Comment.create.graphql({item: { text: 'very cool', post: p}})
+// const re = Comment.list.graphql({q: {post: {id: 1}}})
+// console.log('as', re)
 
 // const {Note} = baseModule.modules
 // Note.mutations.create.tmpstore({ text: 'Hugo' })

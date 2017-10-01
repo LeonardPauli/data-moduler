@@ -15,7 +15,7 @@ export const moduler = new DataModuler({
 
 // Define the modules (User, Note)
 const { allowNull, isStatic, onlyId } = moduler.dataFlags
-const { STRING, BOOLEAN, INT, SELF, DATE } = moduler.dataTypes
+const { STRING, BOOLEAN, INT, SELF, DATE, LIST, OBJECT } = moduler.dataTypes
 
 /*
 const Color= {
@@ -145,7 +145,8 @@ const Post = {
 	getters: {
 		comments: {
 			// default: (ctx, input)=> ctx.module.Comment.list(ctx, input),
-			// graphql: (ctx, input)=> ctx.module.Comment.list.graphql(ctx, input),
+			graphql: (ctx, _input)=> [{a:'hello'}, {a:'s'}],//Comment._module.list.graphql({q: {post: {id: 1}}}),
+			type: LIST.of(Comment),
 			// graphql: (ctx, input)=> console.dir({a: 1, ctx, input}, {colors:1, depth: 2}),
 		},
 	},

@@ -87,9 +87,23 @@ const crud = {
 			.documents.filter(d=> {
 				const keys = input? Object.keys(input): []
 				if (!keys.length) return true
-				return keys.some(k=>
-					d[k].match(new RegExp(`.*${input[k]}.*`, 'ig'))
-				)
+				return keys.some(k=> {
+					const val = input[k]
+					const docVal = d[k]
+					if (typeof val === 'string')
+						return docVal.match(new RegExp(`.*${val}.*`, 'ig'))
+					if (val === null) return false
+					if (typeof val === 'object') {
+						const valKeys = Object.keys(val)
+						if (valKeys.length!=1 || valKeys[0]!='id') {
+							console.warn(`tmpstore plugin currently only support nested `
+								+`filters on id; (${name}.list with ${k}: {${valKeys}}`)
+							return false
+						}
+						return docVal+'' === val.id+''
+					}
+					return false
+				})
 			}),
 
 		delete: ()=> ({store, module, self})=>

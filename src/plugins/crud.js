@@ -104,12 +104,11 @@ const getFilterType = moduler=> module=> {
 		const field = module.fields[name]
 
 		if (field.type._module) {
-			// if (!field.type._module.filterType) {
-			// 	console.warn(`no filterType defined on ${field.type._module.name}`)
-			// 	return
-			// }
-			// return filters[name] = field.type._module.filterType
-			return
+			if (!field.type._module.filterType) {
+				console.warn(`no filterType defined on ${field.type._module.name}`)
+				return
+			}
+			return filters[name] = field.type._module.filterType
 		}
 
 		filters[name] = {...field.type, allowNull}

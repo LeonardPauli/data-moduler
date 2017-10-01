@@ -1,10 +1,10 @@
 import getFieldsNormaliser, {getFieldNormaliser} from './getFieldsNormaliser'
 
 // helpers
-const getListOf = moduler=> type=> module=> {
-	const fieldNormaliser = getFieldNormaliser(moduler)(module)
+const getListOf = moduler=> type=> rawModule=> {
+	const module = rawModule._module || rawModule
+	const innerType = getFieldNormaliser(moduler)(module)({type}).type
 	const {plugins} = moduler
-	const innerType = fieldNormaliser({type}).type
 
 	const newType = {}
 	plugins.forEach(({namespace, dataTypes={}})=> {
@@ -56,6 +56,9 @@ const objectTypeCreator = moduler=> (fields, name)=> module=> {
 	// plugins.dataTypes.OBJECT.typeReducer, but think it's better solved with a flag for the
 	// usual typeReducer or similar.
 
+	// TODO: is this really wanted? Cashe created object
+	if (fields.__createdType) return {type: fields.__createdType}
+
 	const fieldNormaliser = getFieldNormaliser(moduler)(module)
 	const {plugins} = moduler
 	const type = {
@@ -80,6 +83,7 @@ const objectTypeCreator = moduler=> (fields, name)=> module=> {
 		value: moduleToString,
 	})
 
+	fields.__createdType = type
 	return {type}
 }
 
