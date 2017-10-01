@@ -1,7 +1,7 @@
 
 
 
-
+// 17 sep: see https://www.graph.cool/
 
 
 // const store = baseModule.veux.store // veux store

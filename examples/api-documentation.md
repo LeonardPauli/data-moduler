@@ -16,124 +16,75 @@ ie. instead of REST API. Supports CRUD plugin. See localhost/graphql if [GraphiQ
 
 ## Modules
 
-- [User](#user), Everyone accessing the system are users, even bots
-  - [Color](#color)
-- [Note](#note), *Tips:* Write one note every day in the morning
-
-
-
----
-### User
-Everyone accessing the system are users, even bots
-
-| Field | Type          | Comment                      |
-|-------|---------------|------------------------------|
-| lal   | [User](#user) |                              |
-| name  | STRING        |                              |
-| thing | [Note](#note) |                              |
-| rang1 | Color         |                              |
-| rang2 | Color         |                              |
-| title | STRING        | *ie.* CEO, or Happiness Hero |
-| id    | ID            |                              |
-
-#### Actions
-
-###### Mutations
-
-- __create__: User
-  > **item:** User
-  > **returns:** If ok or not
-
-- __update__: User
-  > **id:** ID
-  > **item:** User
-
-- __delete__: BOOLEAN
-  > **id:** ID
-
-###### Getters
-
-- __load__: User
-  > **id:** ID
-
-- __list__: [User]
-  > Has filter ability
-  >
-  > **q:** UserFilter
-
+- [Post](#post)
+- [Comment](#comment)
 
 
 ---
-### Color
-
-| Field | Type   | Comment |
-|-------|--------|---------|
-| hex   | STRING |         |
-| id    | ID     |         |
-
-#### Actions
-
-###### Mutations
-
-- __create__: Color
-  > **item:** Color
-  > **returns:** If ok or not
-
-- __update__: Color
-  > **id:** ID
-  > **item:** Color
-
-- __delete__: BOOLEAN
-  > **id:** ID
-
-###### Getters
-
-- __load__: Color
-  > **id:** ID
-
-- __list__: [Color]
-  > Has filter ability
-  >
-  > **q:** ColorFilter
-
-
-
----
-### Note
-*Tips:* Write one note every day in the morning
+### Post
 
 | Field | Type   | Comment |
 |-------|--------|---------|
 | text  | STRING |         |
-| col   | Color  |         |
-| user  | User   |         |
 | id    | ID     |         |
 
 #### Actions
 
 ###### Mutations
 
-- __create__: Note
-  > **item:** Note
+- __create__: Post
+  > **item:** Post
   > **returns:** If ok or not
 
-- __update__: Note
+- __update__: Post
   > **id:** ID
-  > **item:** Note
+  > **item:** Post
 
 - __delete__: BOOLEAN
   > **id:** ID
 
 ###### Getters
 
-- __anUppercaseText__: STRING
-
-- __uppercaseText__: STRING *non-static*
-
-- __load__: Note
+- __load__: Post
   > **id:** ID
 
-- __list__: [Note]
+- __list__: [Post]
   > Has filter ability
   >
-  > **q:** NoteFilter
+  > **q:** PostFilter
+
+
+
+---
+### Comment
+
+| Field | Type   | Comment |
+|-------|--------|---------|
+| post  | Post   |         |
+| text  | STRING |         |
+| id    | ID     |         |
+
+#### Actions
+
+###### Mutations
+
+- __create__: Comment
+  > **item:** Comment
+  > **returns:** If ok or not
+
+- __update__: Comment
+  > **id:** ID
+  > **item:** Comment
+
+- __delete__: BOOLEAN
+  > **id:** ID
+
+###### Getters
+
+- __load__: Comment
+  > **id:** ID
+
+- __list__: [Comment]
+  > Has filter ability
+  >
+  > **q:** CommentFilter

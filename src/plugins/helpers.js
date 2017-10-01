@@ -2,7 +2,8 @@ export const itemFieldsIterator = (context, fn)=> item=> {
 	if (!item) return item
 	const {thisAction} = context
 	const newFields = {...item}
-	const returnModule = thisAction.type.type._module
+	const returnType = thisAction.type.type.ofType || thisAction.type.type
+	const returnModule = returnType._module
 	if (!returnModule) return newFields
 
 	const moduleFields = returnModule.fields

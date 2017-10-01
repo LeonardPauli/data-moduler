@@ -62,7 +62,6 @@ const getTypeName = type=> {
 }
 
 const mdTypeLink = field=> {
-	// console.dir({ft: field.type}) ||
 	const {type, formatter} = getTypeName(field.type)
 	return formatter(mdLink(type.name, type.documentationURL))
 }

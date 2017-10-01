@@ -21,13 +21,17 @@ baseModule.markdown.writeFile({
 const store = new moduler.tmpstore.Store()
 moduler.tmpstore.store = store // for CRUD actions
 baseModule.tmpstore.attach({store})
-// baseModule.mutations.create.tmpstore()
 // log(baseModule, 7)
 // log(baseModule.modules, 10)
 
-const {Note} = baseModule.modules
-Note.mutations.create.tmpstore({ text: 'Hugo' })
-Note.mutations.create.tmpstore({ text: 'House' })
+const {Post, Comment} = baseModule.modules
+const p = Post.mutations.create.graphql({item: {text: 'My first post'}})
+Comment.mutations.create.graphql({item: { text: 'nice one!', post: p}})
+Comment.mutations.create.graphql({item: { text: 'very cool', post: p}})
+
+// const {Note} = baseModule.modules
+// Note.mutations.create.tmpstore({ text: 'Hugo' })
+// Note.mutations.create.tmpstore({ text: 'House' })
 
 // const {User} = baseModule.modules
 // log('\nCREATE')

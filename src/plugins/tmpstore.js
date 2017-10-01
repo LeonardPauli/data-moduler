@@ -113,7 +113,7 @@ const actionsWrapper = ({context, fn})=> {
 	const fieldsParser = itemFieldsIterator(context, fieldParser)
 	const {fieldSectionName} = context
 	const {isList} = context.thisAction.type.type
-
+	
 	const input = fieldSectionName=='mutations'
 		? fieldsSerializer(context.input)
 		: context.input

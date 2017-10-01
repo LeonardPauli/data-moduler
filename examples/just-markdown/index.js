@@ -17,6 +17,7 @@ export const moduler = new DataModuler({
 const { allowNull, isStatic, onlyId } = moduler.dataFlags
 const { STRING, BOOLEAN, INT, SELF } = moduler.dataTypes
 
+/*
 const Color= {
 	fields: {
 		hex: STRING,
@@ -133,13 +134,38 @@ Object.assign(Note, {
 	// },
 
 })
+*/
+
+const Post = {
+	fields: {
+		text: STRING,
+		// comments: {
+		// 	type: LIST.of(Comment),
+		// }
+	},
+}
+
+const Comment = {
+	fields: {
+		post: Post, // doesn't auto create targetField
+		// post: {Post, targetField: 'comments'},
+		// post: {Post, targetField: {
+		// 	// ...sourceField, // delete Post, etc... hmm.. could be more complicated than solving
+		// 	// allowNull, comment, ...
+		// 	name: 'comments',
+		// 	type: LIST.of(Comment), // SELF?
+		// }},
+		text: STRING,
+	},
+}
+
 
 // Parse the base module (including all the models)
 const rawBaseModule = {
 	name: 'DemoAPI',
 	title: 'Simple, markdown only, demo',
 	comment: 'In this example, we got the specs for a note-taking tool.',
-	modules: {User, Note},
+	modules: {Post, Comment},
 }
 const baseModule = moduler.parse(rawBaseModule)
 export default baseModule

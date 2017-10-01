@@ -90,8 +90,8 @@ const typeReducer = module=> {
 				const moduleFieldResolver = (parent, args, req, {rootValue})=> {
 					const self = parent[fieldName]
 					if (!self) return null
-					return typeModule.getters.load[namespace](self)
-						.native({parent, args, req, rootValue})
+					return typeModule.getters.load[namespace]
+						.native({parent, args: self, req, rootValue})
 						// in this case, parent and args are probably superfluous
 				}
 
@@ -317,15 +317,25 @@ const fieldSerializer = ({data, module, context})=> {
 
 
 const actionsWrapper = ({context, fn})=> {
-	const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
+	const {fieldSectionName} = context
+	if (fieldSectionName!='mutations')
+		return fn(context, context.input.args)
 
-	return fn({
-		...context,
-		// store: context.moduler[namespace].store,
-		self: context.parent, // TODO; only do this if set to isStatic:false?
-	}, {
+	// TODO: look over this
+	const fieldsSerializer = itemFieldsIterator(context, fieldSerializer)
+	const item = fieldsSerializer(context.input.args.item)
+
+	const ctx = {...context}
+	// store: context.moduler[namespace].store,
+	// TODO; only do this if set to isStatic:false?
+	if (context.parent) {
+		ctx.self = context.parent
+		// console.warn(`got context.parent ${context.parent}`)
+	}
+
+	return fn(ctx, {
 		...context.input.args,
-		item: fieldsSerializer(context.input.args.item),
+		item,
 	})
 }
 
