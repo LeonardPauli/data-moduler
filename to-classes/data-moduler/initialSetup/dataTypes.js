@@ -1,7 +1,7 @@
 /* eslint no-unused-vars: 0 */
 
 import {dataTypes, DataModule} from '../index'
-const {DataType, registerDataType} = dataTypes
+const {DataType, registerDataType, getType} = dataTypes
 
 
 @registerDataType class ANY extends DataType {}
@@ -10,8 +10,8 @@ const {DataType, registerDataType} = dataTypes
 // String
 
 @registerDataType class STRING extends DataType {
-	static matchesRawType (key, value) {
-		return value===String || super.matchesRawType(key, value)
+	static matchesRawType (value, key) {
+		return value===String || super.matchesRawType(value, key)
 	}
 	validate (value, opt) {
 		const val = super.validate(value, opt)
@@ -26,8 +26,8 @@ const {DataType, registerDataType} = dataTypes
 // Numbers
 
 @registerDataType class BOOLEAN extends DataType {
-	static matchesRawType (key, value) {
-		return value===Boolean || super.matchesRawType(key, value)
+	static matchesRawType (value, key) {
+		return value===Boolean || super.matchesRawType(value, key)
 	}
 	validate (value, opt) {
 		const val = super.validate(value, opt)
@@ -37,8 +37,8 @@ const {DataType, registerDataType} = dataTypes
 }
 
 @registerDataType class DECIMAL extends DataType {
-	static matchesRawType (key, value) {
-		return value===Number || super.matchesRawType(key, value)
+	static matchesRawType (value, key) {
+		return value===Number || super.matchesRawType(value, key)
 	}
 	validate (value, opt) {
 		const val = super.validate(value, opt)
@@ -49,9 +49,9 @@ const {DataType, registerDataType} = dataTypes
 }
 
 @registerDataType class INT extends DECIMAL {
-	// static matchesRawType (key, value) {
+	// static matchesRawType (value, key) {
 	// 	// if (value===Number) return true
-	// 	return super.matchesRawType(key, value)
+	// 	return super.matchesRawType(value, key)
 	// }
 	validate (value, opt) {
 		const val = super.validate(value, opt)
@@ -66,25 +66,38 @@ const {DataType, registerDataType} = dataTypes
 
 @registerDataType class LIST extends DataType {
 	innerType = ANY
-	static matchesRawType (key, value) {
+
+	static matchesRawType (value, key) {
 		if (value===Array) return true
 		if (value instanceof Array) {
 			if (value.length===1 || value.length===0) return true
 			return false
 		}
-		return super.matchesRawType(key, value)
+		return super.matchesRawType(value, key)
 	}
 
-	static of () {
-		// LIST is special, used like {type: LIST.of(...)}
-		// moduler=> type=> ({
-		//		type: getListOf(moduler)(type),
+	static of (innerType) {
+		innerType
 		throw new Error('TODO')
 	}
 }
 
 @registerDataType class ENUM extends DataType {
-	static matchesRawType (key, value) {
+	values = []
+
+	constructor (config = {}) {
+		super(config)
+
+		const {input} = config
+		if (input) {
+			if (!(input instanceof Array))
+				throw new Error(`input should be array of primitive `
+					+`values that are allowed, was '${input}'`)
+			this.values = [...input]
+		}
+	}
+
+	static matchesRawType (value, key) {
 		if (value instanceof Array) {
 			const primitives = [Boolean, Number, String]
 			const allPrimitive = !value.some(v=>
@@ -92,18 +105,20 @@ const {DataType, registerDataType} = dataTypes
 			)
 			return allPrimitive
 		}
-		return super.matchesRawType(key, value)
+		return super.matchesRawType(value, key)
 	}
 
 	validate (value, opt) {
 		const val = super.validate(value, opt)
-		throw new Error('TODO')
-		// return val
+		const {returnIndex} = opt
+		const {values} = this
+		const idx = values.indexOf(val)
+		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${values})`)
+		return returnIndex? idx: val
 	}
 
-	static of () {
-		// objectTypeCreator
-		throw new Error('TODO')
+	static of (values) {
+		return new this({input: values})
 	}
 }
 
@@ -112,8 +127,8 @@ const {DataType, registerDataType} = dataTypes
 // Other built-in core types
 
 @registerDataType class DATE extends DataType {
-	static matchesRawType (key, value) {
-		return value===Date || super.matchesRawType(key, value)
+	static matchesRawType (value, key) {
+		return value===Date || super.matchesRawType(value, key)
 	}
 
 	validate (value, opt) {
@@ -134,11 +149,11 @@ const {DataType, registerDataType} = dataTypes
 // Module / object
 
 @registerDataType class MODULE extends DataType {
-	static matchesRawType (key, value) {
+	static matchesRawType (value, key) {
 		// key[0]===key[0].toUpperCase()
 		// value._isModule
 		if (value instanceof DataModule) return true
-		return super.matchesRawType(key, value)
+		return super.matchesRawType(value, key)
 	}
 
 	validate (value, opt) {
@@ -168,8 +183,8 @@ const {DataType, registerDataType} = dataTypes
 // OLD NOTE: JSON/JSONB/etc, or just nested fields;
 // 	For validation/doc: OBJECT.of({field:type, ...})
 @registerDataType class OBJECT extends DataType {
-	static matchesRawType (key, value) {
-		return value===Object || super.matchesRawType(key, value)
+	static matchesRawType (value, key) {
+		return value===Object || super.matchesRawType(value, key)
 	}
 
 	validate (value, opt) {

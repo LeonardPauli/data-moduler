@@ -45,7 +45,7 @@ class DataType {
 
 	// could be used to dynamically match, eg. see MODULE data type
 	// 	or for native type aliases, eg. see STRING data type
-	static matchesRawType (key, value) {
+	static matchesRawType (value, key) {
 		if (value instanceof this) return true
 		if (key==this.name) return this
 		return false
@@ -61,9 +61,36 @@ class DataType {
 	}
 }
 
-Object.defineProperty(dataTypes, 'DataType', { value: DataType })
-Object.defineProperty(dataTypes, 'findMatchingType', { value: (key, value)=>
-	dataTypes.asList.find(d=> d.matchesRawType(key, value)) })
+const helpers = {
+	DataType,
+	findMatchingType: (value, key)=> dataTypes.asList.find(d=> d.matchesRawType(value, key)),
+	getType: (rawType, key)=> rawType instanceof DataType
+		? rawType: dataTypes.findMatchingType(rawType, key),
+
+	// normalize type field into type instance
+	getTypeInstance: (objectOrRawType, key)=> {
+		// new STRING({...config})
+		if (objectOrRawType instanceof DataType)
+			return objectOrRawType
+
+		// String | STRING | User | ...
+		if (typeof objectOrRawType!=='object')
+			return dataTypes.findMatchingType(objectOrRawType)
+		Object.keys()
+
+		// TODO: check cases:
+		// - {String, ...config}
+		// - {type: String, ...config}
+		// 	const type = dataTypes.findMatchingType(String)
+		// 	if (!type) throw ...
+		// 	-> new type(config)
+		// - {String, type: INT, otherField: Number, ...config} -> new INT(config)
+
+	},
+}
+
+Object.keys(helpers).forEach(k=>
+	Object.defineProperty(dataTypes, k, {value: helpers[k]}))
 
 
 const registerDataType = dataType=> {
