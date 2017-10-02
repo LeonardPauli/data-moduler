@@ -178,7 +178,7 @@ module.exports = {
     'no-native-reassign': 'error',
     'no-negated-condition': 'off', // good for ()=> !condition ? short : long
     'no-negated-in-lhs': 'error',
-    'no-nested-ternary': 'warn',
+    'no-nested-ternary': 'off',
     'no-new': 'error',
     'no-new-func': 'error',
     'no-new-object': 'error',

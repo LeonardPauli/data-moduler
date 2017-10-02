@@ -15,11 +15,13 @@ const stringFromObject = (obj, depth=1, options={}, prefix='')=> {
 	// render object name
 	const getObjectName = obj=> {
 		if (obj.toString === [].toString) return 'Array'
-		const objStr = (obj.toString && obj.toString())
-			|| (typeof obj == 'object' && typeof obj.name == 'string' && obj.name)
+		const objOrFunc = typeof obj == 'object' || typeof obj == 'function'
+		const objStr = (objOrFunc && typeof obj.name == 'string' && obj.name)
+			|| (obj.toString && obj.toString())
 			|| typeof obj
-		const useObjStr = objStr!=='[object Object]'
-		return useObjStr? objStr.replace(/\n(.| |\n)*$/, '...'): null
+		return objStr
+		// const useObjStr = objStr!=='[object Object]'
+		// return useObjStr? objStr.replace(/\n(.| |\n)*$/, '...'): null
 	}
 
 	// when value shouldn't be futher expanded

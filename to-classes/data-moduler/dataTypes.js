@@ -2,6 +2,47 @@ const dataTypes = {}
 export default dataTypes
 
 class DataType {
+	allowNull = {default: false}
+	defaultValue = undefined
+
+	constructor (config = {}) {
+		const {allowNull, default: defaultValue} = config
+
+		if (allowNull!==void 0) {
+			if (typeof allowNull === 'boolean')
+				this.allowNull = {default: allowNull}
+			else if (typeof allowNull === 'object')
+				this.allowNull = allowNull
+			else throw new Error(`typeof allowNull === ${typeof allowNull}, `
+				+`but expected undefined, boolean, or object`)
+		} else if (this.defaultValue===null)
+			this.allowNull = {default: true}
+
+		if (defaultValue!==void 0) {
+			this.defaultValue = this.validate(defaultValue)
+			// if (defaultValue===null && !this.allowNull.default)
+			// 	throw new Error('!allowNull but defaultValue=null? '
+			// 		+'set defaultValue to undefined or change/remove allowNull property')
+		}
+
+	}
+
+	validate (value, {usageType = 'default'} = {}) {
+		const {defaultValue} = this
+		const allowNull = typeof this.allowNull[usageType] === 'boolean'
+			? this.allowNull[usageType]: this.allowNull.default
+
+		// handle null value / default value
+		const val = value!==void 0? value:
+			typeof defaultValue==='function' ? defaultValue(): defaultValue
+		if (val===void 0 || val===null) {
+			if (allowNull) return val
+			throw new Error(`value=${val} but allowNull=${allowNull}`)
+		}
+
+		return val
+	}
+
 	// could be used to dynamically match, eg. see MODULE data type
 	// 	or for native type aliases, eg. see STRING data type
 	static matchesRawType (key, value) {
@@ -9,7 +50,6 @@ class DataType {
 		if (key==this.name) return this
 		return false
 	}
-
 
 	static addConverter ({ target, targetName, from, to }) {
 		const name = targetName || (target && target.name)

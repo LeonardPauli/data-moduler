@@ -12,4 +12,10 @@ export default class DataModule {
 	$beforeDelete () {}
 
 	static moduleModifications = []
+
+	// static toString (opt) {
+	// 	const {rawCode} = opt
+	// 	if (rawCode) return super.toString()
+	// 	return this.name
+	// }
 }
