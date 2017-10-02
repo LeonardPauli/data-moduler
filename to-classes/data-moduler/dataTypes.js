@@ -9,6 +9,16 @@ class DataType {
 		if (key==this.name) return this
 		return false
 	}
+
+
+	static addConverter ({ target, targetName, from, to }) {
+		const name = targetName || (target && target.name)
+		if (!name) throw new Error(`${this.name}.addConverter: name is missing`)
+
+		if (target) Object.defineProperty(this, `$${name}`, { value: target })
+		if (to) Object.defineProperty(this.prototype, `to${name}`, { value: to })
+		if (from) Object.defineProperty(this.prototype, `from${name}`, { value: from })
+	}
 }
 
 Object.defineProperty(dataTypes, 'DataType', { value: DataType })

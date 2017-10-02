@@ -39,7 +39,7 @@ export default class DataModuleEmpty extends DataModule {
 
 	}
 
-	static modelModifications = [...super.modelModifications, {
+	static moduleModifications = [...super.moduleModifications, {
 
 	}]
 }

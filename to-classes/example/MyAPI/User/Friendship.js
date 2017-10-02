@@ -28,8 +28,8 @@ export default class Friendship extends BaseModel {
 			throw new ValidationError('this.userA == this.userB')
 	}
 
-	static modelModifications = [ ...super.modelModifications, {
-		model: User,
+	static moduleModifications = [ ...super.moduleModifications, {
+		module: User,
 		getters: {
 			// beware name collisions
 			// 'self(userA=target or userB=target)', -> a query, convertable to any store

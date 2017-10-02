@@ -11,5 +11,5 @@ export default class DataModule {
 	$beforeUpdate () {}
 	$beforeDelete () {}
 
-	static modelModifications = []
+	static moduleModifications = []
 }

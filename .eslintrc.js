@@ -234,7 +234,7 @@ module.exports = {
     'no-void': 'off', // used like: return void fn(); // calls fn, then returns undefined
     'no-warning-comments': 'off', // maybe before going into
     // staging... good notes for future work though
-    'no-whitespace-before-property': 'error',
+    'no-whitespace-before-property': 'off', // sometimes alinging is neat
     'no-with': 'error',
     'nonblock-statement-body-position': ['error', 'any'],
     'object-curly-newline': 'off', // TODO maybe
