@@ -1,3 +1,4 @@
+import {performModuleModifications} from './moduleModifications'
 import {dataTypes, getActionInstance} from './dataTypes'
 const {getTypeInstance} = dataTypes
 
@@ -26,24 +27,14 @@ export const modulateActions = ({Module, fields, isGetter})=> {
 	return resFields
 }
 
-export const performModuleModifications = Module=> moduleModifications=> {
-	Module.performModuleModification()
-}
-
 // normalises fields and actions/getters
 // + executes moduleModifications matching self's submodule tree
-
-// executes moduleModifications
-// 	- on submodules from sibling submodules
-// 	- on submodules from sibling submodules children recursively
-// 	- on self from self
-// 	- on self from submodules + submodules children recursively
-// 	...thereby performing all modifications matching self's submodule tree
 const modulate = Module=> {
 	Module.fields = modulateFields({Module, fields: Module.fields})
 	Module.actions = modulateFields({Module, fields: Module.actions})
 	Module.getters = modulateFields({Module, fields: Module.getters, isGetter: true})
 
-	performModuleModifications(Module)(Module.moduleModifications)
+	Module.moduleModifications = performModuleModifications(
+		Module.moduleModifications, [Module, ...Module.allSubmodules()])
 }
 export default modulate

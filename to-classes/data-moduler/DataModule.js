@@ -1,5 +1,10 @@
 export default class DataModule {
 	static _isModule = true
+	static get _isEntity () {
+		return Object.keys(this.fields).length > 0
+	}
+	static documentationNote = undefined
+	static documentationURL = undefined
 	
 	static fields = {}
 	static submodules = {}
@@ -24,6 +29,11 @@ export default class DataModule {
 	static validate (value, opt = {}) {
 		return validateAgainstFields(this.fields)(value, {Module: this, ...opt})
 	}
+
+	static allSubmodules () {
+		return Object.keys(this.submodules).map(k=> this.submodules[k])
+			.reduce((a, Module)=> [...a, Module, ...Module.allSubmodules()], [])
+	}
 }
 
 export const validateAgainstFields = fields=> (value, opt = {})=> {
@@ -42,3 +52,11 @@ export const validateAgainstFields = fields=> (value, opt = {})=> {
 
 	return val
 }
+
+
+// TODO: sql plugin, add to model:
+// static get tabelName () {
+// 	return this.name
+// 		.replace(/^[A-Z]/, l=> l.toLowerCase())
+// 		.replace(/[A-Z]/g, l=> '_'+l.toLowerCase())
+// }

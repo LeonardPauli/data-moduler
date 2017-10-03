@@ -1,4 +1,4 @@
-import {plugins, dataTypes, flags} from '../index'
+import {plugins, dataTypes, flags, performModuleModification} from '../../index'
 const {Plugin, registerPlugin} = plugins
 const {ID, SELF, FILTER} = dataTypes
 const {isStatic, allowNull, onlyNew} = flags
@@ -8,19 +8,18 @@ const {isStatic, allowNull, onlyNew} = flags
 class CrudPlugin extends Plugin {
 	static namespace = 'crud'
 
-	static getAddMiddleware = module=> middleware=> {
+	static getAddMiddleware = Module=> middleware=> {
 		const {namespace} = middleware
 		
 		const wrapper = fn=> ctx=> {
-			const {middlewares} = module.$crud
+			const {middlewares} = Module.$crud
 			const idx = middlewares.indexOf(middleware)
 			const next = idx>0 ? middlewares[idx-1] : ()=> void 0
 
 			return fn({...ctx, next})
 		}
 
-		module.moduleModifications = [...module.moduleModifications, {
-			module,
+		performModuleModification(Module, {
 			getters: {
 				load: {[namespace]: wrapper(middleware.load)},
 				list: {[namespace]: wrapper(middleware.list)},
@@ -30,18 +29,17 @@ class CrudPlugin extends Plugin {
 				update: {[namespace]: wrapper(middleware.update)},
 				delete: {[namespace]: wrapper(middleware.delete)},
 			},
-		}]
+		})
 	}
 
-	static apply (module) {
-		if (module.$crud === false) module.$crud = {enabled: false}
-		module.$crud = module.$crud || {enabled: true}
-		if (!module.$crud.enabled) return
-		module.$crud.middlewares = []
-		module.$crud.addMiddleware = this.getAddMiddleware(module)
+	static apply (Module) {
+		if (Module.$crud === false) Module.$crud = {enabled: false}
+		Module.$crud = Module.$crud || {enabled: true}
+		if (!Module.$crud.enabled) return
+		Module.$crud.middlewares = []
+		Module.$crud.addMiddleware = this.getAddMiddleware(Module)
 
-		module.moduleModifications = [...module.moduleModifications, {
-			module,
+		performModuleModification(Module, {
 			getters: {
 				load: {
 					isStatic,
@@ -68,7 +66,7 @@ class CrudPlugin extends Plugin {
 					input: { id: ID },
 				},
 			},
-		}]
+		})
 	}
 
 	static documentation = {

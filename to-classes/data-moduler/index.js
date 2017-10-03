@@ -12,6 +12,10 @@ import destinations from './destinations'
 
 import modulate from './modulate'
 import ValidationError from './ValidationError'
+import {
+	performModuleModification,
+	performModuleModifications,
+} from './moduleModifications'
 
 // only inported to run setup scripts
 import initialSetup from './initialSetup'
@@ -23,6 +27,8 @@ export {
 	modulate,
 	ValidationError,
 	validateAgainstFields,
+	performModuleModification,
+	performModuleModifications,
 }
 
 export default class DataModuler {
