@@ -2,7 +2,7 @@
 // Created by Leonard Pauli, July 2017 (to-classes started 1 oct)
 // Copyright Leonard Pauli, All rights reserved
 
-import DataModule from './DataModule'
+import DataModule, {validateAgainstFields} from './DataModule'
 
 import flags from './flags'
 import dataTypes from './dataTypes'
@@ -22,6 +22,7 @@ export {
 	plugins, destinations,
 	modulate,
 	ValidationError,
+	validateAgainstFields,
 }
 
 export default class DataModuler {

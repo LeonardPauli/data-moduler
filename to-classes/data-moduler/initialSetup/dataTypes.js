@@ -1,7 +1,10 @@
 /* eslint no-unused-vars: 0 */
 
-import {dataTypes, DataModule} from '../index'
+import DataModule, {validateAgainstFields} from '../DataModule'
+import dataTypes from '../dataTypes'
 const {DataType, registerDataType, getType} = dataTypes
+
+import {emojiRegex, emailRegexes} from './regexes'
 
 
 @registerDataType class ANY extends DataType {}
@@ -10,6 +13,32 @@ const {DataType, registerDataType, getType} = dataTypes
 // String
 
 @registerDataType class STRING extends DataType {
+	static emojiRegex = emojiRegex
+	disallowEmoji = false
+	regex = undefined
+
+	toJSON () {
+		return { ...super.toJSON, disallowEmoji: this.disallowEmoji, regex: this.regex }
+	}
+
+	constructor (config = {}) {
+		super(config)
+
+		const {disallowEmoji} = config
+		if (disallowEmoji!==void 0) {
+			if (typeof disallowEmoji !== 'boolean')
+				throw new Error(`disallowEmoji: expected boolean, got ${typeof disallowEmoji}`)
+			this.disallowEmoji = disallowEmoji
+		}
+
+		const {regex} = config
+		if (regex!==void 0) {
+			if (!(regex instanceof RegExp))
+				throw new Error(`regex: expected instanceof RegExp (got ${regex})`)
+			this.regex = regex
+		}
+	}
+
 	static matchesRawType (value, key) {
 		return value===String || super.matchesRawType(value, key)
 	}
@@ -17,6 +46,10 @@ const {DataType, registerDataType, getType} = dataTypes
 		const val = super.validate(value, opt)
 		if (typeof val!=='string')
 			throw new Error(`expected string, but typeof val==='${typeof val}'`)
+		if (this.disallowEmoji && this.emojiRegex.test(val))
+			throw new Error(`disallowEmoji=${this.disallowEmoji}, but string contained emoji`)
+		if (this.regex && !this.regex.test(val))
+			throw new Error(`value failed regex validation`)
 		return val
 	}
 }
@@ -67,6 +100,19 @@ const {DataType, registerDataType, getType} = dataTypes
 @registerDataType class LIST extends DataType {
 	innerType = ANY
 
+	static supportsOfInput = true
+	constructor (config = {}) {
+		super(config)
+
+		const {ofInput: rawInnerType} = config
+		if (rawInnerType) {
+			const innerType = getType(rawInnerType)
+			if (!innerType) throw new Error(`no matching type `
+				+`found for ofInput/rawInnerType (${rawInnerType})`)
+			this.innerType = innerType
+		}
+	}
+
 	static matchesRawType (value, key) {
 		if (value===Array) return true
 		if (value instanceof Array) {
@@ -76,24 +122,29 @@ const {DataType, registerDataType, getType} = dataTypes
 		return super.matchesRawType(value, key)
 	}
 
-	static of (innerType) {
-		innerType
-		throw new Error('TODO')
+	validate (value, opt) {
+		const val = this.innerType.validate(value, opt)
+		const {returnIndex} = opt
+		const {values} = this
+		const idx = values.indexOf(val)
+		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${values})`)
+		return returnIndex? idx: val
 	}
 }
 
 @registerDataType class ENUM extends DataType {
 	values = []
 
+	static supportsOfInput = true
 	constructor (config = {}) {
 		super(config)
 
-		const {input} = config
-		if (input) {
-			if (!(input instanceof Array))
-				throw new Error(`input should be array of primitive `
-					+`values that are allowed, was '${input}'`)
-			this.values = [...input]
+		const {ofInput} = config
+		if (ofInput) {
+			if (!(ofInput instanceof Array))
+				throw new Error(`ofInput should be array of primitive `
+					+`values that are allowed, was '${ofInput}'`)
+			this.values = [...ofInput]
 		}
 	}
 
@@ -115,10 +166,6 @@ const {DataType, registerDataType, getType} = dataTypes
 		const idx = values.indexOf(val)
 		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${values})`)
 		return returnIndex? idx: val
-	}
-
-	static of (values) {
-		return new this({input: values})
 	}
 }
 
@@ -149,53 +196,91 @@ const {DataType, registerDataType, getType} = dataTypes
 // Module / object
 
 @registerDataType class MODULE extends DataType {
+	innerModule = undefined
+
+	static supportsOfInput = true
+	constructor (config) {
+		super(config)
+
+		const {ofInput: innerModule} = config
+		if (!innerModule)
+			throw new Error(`ofInput/innerModule is required`)
+		if (!innerModule._isModule)
+			throw new Error(`ofInput/innerModule has to be a DataModule subclass (got ${innerModule})`)
+		this.innerModule = innerModule
+	}
+
 	static matchesRawType (value, key) {
 		// key[0]===key[0].toUpperCase()
 		// value._isModule
-		if (value instanceof DataModule) return true
+		// new value() instanceof DataModule
+		let superClass = value
+		while (superClass) {
+			if (superClass === DataModule) return true
+			superClass = superClass.prototype
+		}
+		if (value._isModule) return true
 		return super.matchesRawType(value, key)
 	}
 
 	validate (value, opt) {
 		const val = super.validate(value, opt)
-		throw new Error('TODO')
-		// return val
-	}
+		// if (!(value instanceof this.innerModule))
+		// 	throw new Error(`expected value to be instance of ${this.innerModule.name}, `
+		// 		+`but got (${typeof value}, ${value && value.constructor && value.constructor.name})`)
 
-	static of () {
-		// moduleTypeUnwrapper
-		throw new Error('TODO')
+		return this.innerModule.validate(value, opt)
 	}
 }
 
 @registerDataType class SELF extends DataType {
-	// moduleTypeUnwrapper
-
-	// todo: how is this supposed to work?
-
 	validate (value, opt) {
 		const val = super.validate(value, opt)
-		throw new Error('TODO')
-		// return val
+		const {Module} = opt
+
+		if (!Module)
+			throw new Error(`opt.Module is required`)
+		if (!Module._isModule)
+			throw new Error(`opt.Module has to be a DataModule subclass (got ${Module})`)
+
+		return Module.validate(value, opt)
 	}
 }
 
 // OLD NOTE: JSON/JSONB/etc, or just nested fields;
 // 	For validation/doc: OBJECT.of({field:type, ...})
 @registerDataType class OBJECT extends DataType {
+	objectName = undefined // used by some destinations, ie. graphql, needs to be unique
+
+	toJSON () {
+		return { ...super.toJSON, objectName: this.objectName }
+	}
+
+	static supportsOfInput = true
+	constructor (config) {
+		super(config)
+
+		const {ofInput: fields} = config
+		if (!fields)
+			throw new Error(`ofInput/fields is required`)
+		if (typeof fields !== 'object')
+			throw new Error(`ofInput/fields: expected object (got ${typeof fields})`)
+		
+		const {name: objectName} = config
+		if (objectName !== void 0) {
+			if (typeof objectName !== 'string' && typeof objectName !== 'function')
+				throw new Error(`ofInput/name: expected string (or ()=> string) (got ${typeof objectName})`)
+			this.objectName = objectName
+		}
+	}
+
 	static matchesRawType (value, key) {
 		return value===Object || super.matchesRawType(value, key)
 	}
 
 	validate (value, opt) {
 		const val = super.validate(value, opt)
-		throw new Error('TODO')
-		// return val
-	}
-
-	static of () {
-		// objectTypeCreator
-		throw new Error('TODO')
+		return validateAgainstFields(this.fields)(val, opt)
 	}
 }
 
@@ -203,9 +288,21 @@ const {DataType, registerDataType, getType} = dataTypes
 
 // Misc
 
-// @registerDataType class URL extends STRING {}
+@registerDataType class URL extends STRING {}
 
-// @registerDataType class EMAIL extends STRING {}
+@registerDataType class EMAIL extends STRING {
+	constructor (config = {}) {
+		super(config)
+
+		const {strictCheck} = config
+		if (strictCheck!==void 0) {
+			if (typeof strictCheck !== 'boolean')
+				throw new Error(`strictCheck: expected boolean, got ${typeof strictCheck}`)
+			const {simple, unicodeSupport, strict} = emailRegexes
+			this.regex = !this.strictCheck? simple: this.allowEmoji? unicodeSupport: strict
+		}
+	}
+}
 
 // @registerDataType class GEOLOCATION extends OBJECT {}
 // OLD NOTE:

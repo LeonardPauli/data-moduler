@@ -4,9 +4,23 @@ export default dataTypes
 class DataType {
 	allowNull = {default: false}
 	defaultValue = undefined
+	ofInput = undefined // used in some data types
+
+	toJSON () {
+		return {
+			allowNull: this.allowNull,
+			defaultValue: this.defaultValue,
+			ofInput: this.ofInput,
+		}
+	}
+
+	static supportsOfInput = false
+	static of (ofInput, config={}) {
+		return new this({...config, ofInput})
+	}
 
 	constructor (config = {}) {
-		const {allowNull, default: defaultValue} = config
+		const {allowNull, default: defaultValue, ofInput} = config
 
 		if (allowNull!==void 0) {
 			if (typeof allowNull === 'boolean')
@@ -23,6 +37,12 @@ class DataType {
 			// if (defaultValue===null && !this.allowNull.default)
 			// 	throw new Error('!allowNull but defaultValue=null? '
 			// 		+'set defaultValue to undefined or change/remove allowNull property')
+		}
+
+		if (ofInput!==void 0) {
+			if (!this.constructor.supportsOfInput)
+				throw new Error(`datatype ${this.constructor.name} doesn't support ofInput`)
+			this.ofInput = ofInput
 		}
 
 	}
@@ -68,24 +88,37 @@ const helpers = {
 		? rawType: dataTypes.findMatchingType(rawType, key),
 
 	// normalize type field into type instance
-	getTypeInstance: (objectOrRawType, key)=> {
+	getTypeInstance: (objectOrRawType, {Module})=> {
+
 		// new STRING({...config})
 		if (objectOrRawType instanceof DataType)
 			return objectOrRawType
 
 		// String | STRING | User | ...
-		if (typeof objectOrRawType!=='object')
-			return dataTypes.findMatchingType(objectOrRawType)
-		Object.keys()
+		if (typeof objectOrRawType!=='object') {
+			const Type = dataTypes.findMatchingType(objectOrRawType)
+			if (!Type) throw new Error(`no matching data type found for ${objectOrRawType}`)
+			return new Type({Module})
+		}
 
-		// TODO: check cases:
-		// - {String, ...config}
-		// - {type: String, ...config}
-		// 	const type = dataTypes.findMatchingType(String)
-		// 	if (!type) throw ...
-		// 	-> new type(config)
-		// - {String, type: INT, otherField: Number, ...config} -> new INT(config)
-
+		// {type: String, ...config}
+		if (objectOrRawType.type!==void 0) {
+			const {type, ...config} = objectOrRawType
+			const Type = dataTypes.findMatchingType(type)
+			if (!Type) throw new Error(`no matching data type found for ${objectOrRawType}`)
+			return new Type({...config, Module})
+		}
+		
+		// {String, ...config}
+		const config = {}
+		const Type = Object.keys(objectOrRawType).reduce((p, k)=> {
+			const val = objectOrRawType[k]
+			const ret = p || dataTypes.findMatchingType(val, k)
+			if (p) config[k] = val
+			return ret
+		}, null)
+		if (!Type) throw new Error(`no matching data type found for ${objectOrRawType}`)
+		return new Type({...config, Module})
 	},
 }
 
