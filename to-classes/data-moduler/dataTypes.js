@@ -28,7 +28,7 @@ class DataType {
 			else if (typeof allowNull === 'object')
 				this.allowNull = allowNull
 			else throw new Error(`typeof allowNull === ${typeof allowNull}, `
-				+`but expected undefined, boolean, or object`)
+				+'but expected undefined, boolean, or object')
 		} else if (this.defaultValue===null)
 			this.allowNull = {default: true}
 
@@ -134,7 +134,7 @@ Object.keys(helpers).forEach(k=>
 
 const registerDataType = dataType=> {
 	if (!(dataType instanceof DataType))
-		throw new Error(`dataType wasn't instanceof DataType`)
+		throw new Error('dataType wasn\'t instanceof DataType')
 
 	const {name} = dataType
 	if (typeof name !== 'string' || name.length==0)

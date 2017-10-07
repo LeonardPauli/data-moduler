@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {DataModule, dataTypes, flags} from 'data-moduler'
 const {ID} = dataTypes
 const {allowNull, unique} = flags

@@ -68,7 +68,7 @@ export const getActionInstance = (objectOrAction, {Module, isGetter})=> {
 		return new (isGetter?Getter:Action)({fn: objectOrAction, Module})
 
 	if (typeof objectOrAction!=='object')
-		throw new Error(`expected Action instance, fn, or `
+		throw new Error('expected Action instance, fn, or '
 			+`config object, but got ${typeof objectOrAction}`)
 
 	return new (isGetter?Getter:Action)({...objectOrAction, Module})

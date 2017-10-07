@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {modulate} from 'data-moduler'
 import {BaseModel} from './BaseModel'
 import User from './User'

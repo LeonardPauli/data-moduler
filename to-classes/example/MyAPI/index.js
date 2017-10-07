@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { modulate, DataModule, plugins } from 'data-moduler'
 const {crud, relations} = plugins
 

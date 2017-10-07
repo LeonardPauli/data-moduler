@@ -7,17 +7,17 @@ class Plugin {
 	static namespace = 'myexample'
 	static targetName = 'MyExample'
 
-	static didRegister () {}
+	static didRegister () { /**/ }
 
 	static apply (module, _opt) {
 		const {namespace} = this
 		const key = `$${namespace}`
 		const val = module[key]
 		
-		module[key] =
-			val === false ? {enabled: false} :
-			val === void 0 ? {enabled: true} :
-			val
+		module[key]
+			= val === false ? {enabled: false} :
+				val === void 0 ? {enabled: true} :
+					val
 
 		if (typeof module[key] !== 'object')
 			throw new Error(`${module.name}.${key} should be `
@@ -78,7 +78,7 @@ Object.defineProperty(plugins, 'strictPluginCheck', { value: true, writable: tru
 
 const registerPlugin = plugin=> {
 	if (!(plugin instanceof Plugin))
-		throw new Error(`plugin wasn't instanceof Plugin`)
+		throw new Error('plugin wasn\'t instanceof Plugin')
 
 	const {namespace} = plugin
 	if (typeof namespace !== 'string' || namespace.length==0)

@@ -62,7 +62,7 @@ export const performModuleModification = Module=> (modificationObject, merger = 
 // 	- on self from self
 // 	- on self from submodules + submodules children recursively
 // 	...thereby performing all modifications matching self's submodule tree
-export const performModuleModifications = (modifications, availableModules)=> {
+export const performModuleModifications = (modifications, availableModules)=>
 	modifications.filter(modification=> {
 		const {Module, modificationObject} = modification
 		if (!availableModules.indexOf(Module)>=0) return true

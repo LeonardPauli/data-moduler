@@ -14,11 +14,11 @@ export default class DataModule {
 	static getters = {}
 
 	static constraints = []
-	$validate () {}
+	$validate () { /**/ }
 
-	$beforeCreate () {}
-	$beforeUpdate () {}
-	$beforeDelete () {}
+	$beforeCreate () { /**/ }
+	$beforeUpdate () { /**/ }
+	$beforeDelete () { /**/ }
 
 	static moduleModifications = []
 

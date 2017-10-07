@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {DataModule, modulate, dataTypes} from 'data-moduler'
 const {STRING} = dataTypes
 

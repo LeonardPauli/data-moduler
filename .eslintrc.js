@@ -275,7 +275,7 @@ module.exports = {
 		'one-var': 'off', // maybe, but not in tiny block
 		'one-var-declaration-per-line': 'error',
 		'operator-assignment': 'error',
-		'operator-linebreak': ['error', 'after', {
+		'operator-linebreak': ['error', 'before', {
 			overrides: {
 				'||': 'before',
 				'&&': 'before',
@@ -294,7 +294,7 @@ module.exports = {
 		'prefer-spread': 'error',
 		'prefer-template': 'off', // TODO: would be nice in some cases...
 		'quote-props': ['error', 'as-needed', { numbers: true }],
-		quotes: ['warn', 'single'],
+		quotes: ['warn', 'single', {allowTemplateLiterals: true}],
 		radix: 'error',
 		'require-await': 'off', // nope, better to write async ()=> x than ()=> Promise.resolve(x), etc
 		'require-jsdoc': ['warn', {require: {

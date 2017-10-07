@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {modulate, ValidationError, flags, dataTypes} from 'data-moduler'
 import {BaseModel} from '../BaseModel'
 const {SELF} = dataTypes
@@ -28,7 +29,7 @@ export default class Friendship extends BaseModel {
 			throw new ValidationError('this.userA == this.userB')
 	}
 
-	static moduleModifications = [ ...super.moduleModifications, {
+	static moduleModifications = [...super.moduleModifications, {
 		module: User,
 		getters: {
 			// beware name collisions

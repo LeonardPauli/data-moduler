@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {DataModule} from 'data-moduler'
 
 export default class DataModuleEmpty extends DataModule {

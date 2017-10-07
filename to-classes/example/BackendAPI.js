@@ -1,3 +1,4 @@
+/* eslint-disable */
 // DataModuler as classes and decorators instead of loose json structures
 // created by Leonard Pauli, 1 oct 2017
 

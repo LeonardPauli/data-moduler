@@ -32,7 +32,7 @@ class MyStringType {
 
 
 @registerPlugin
-class MyExamplePlugin extends Plugin {
+export default class MyExamplePlugin extends Plugin {
 	static namespace = 'myexample'
 	static targetName = 'MyExample'
 

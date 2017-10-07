@@ -49,7 +49,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		if (this.disallowEmoji && this.emojiRegex.test(val))
 			throw new Error(`disallowEmoji=${this.disallowEmoji}, but string contained emoji`)
 		if (this.regex && !this.regex.test(val))
-			throw new Error(`value failed regex validation`)
+			throw new Error('value failed regex validation')
 		return val
 	}
 }
@@ -107,7 +107,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {ofInput: rawInnerType} = config
 		if (rawInnerType) {
 			const innerType = getType(rawInnerType)
-			if (!innerType) throw new Error(`no matching type `
+			if (!innerType) throw new Error('no matching type '
 				+`found for ofInput/rawInnerType (${rawInnerType})`)
 			this.innerType = innerType
 		}
@@ -142,7 +142,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {ofInput} = config
 		if (ofInput) {
 			if (!(ofInput instanceof Array))
-				throw new Error(`ofInput should be array of primitive `
+				throw new Error('ofInput should be array of primitive '
 					+`values that are allowed, was '${ofInput}'`)
 			this.values = [...ofInput]
 		}
@@ -185,7 +185,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 		const dateVal = new Date(val)
 		if (isNaN(dateVal.getTime()))
-			throw new Error(`date is invalid`)
+			throw new Error('date is invalid')
 
 		return dateVal
 	}
@@ -204,7 +204,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 		const {ofInput: innerModule} = config
 		if (!innerModule)
-			throw new Error(`ofInput/innerModule is required`)
+			throw new Error('ofInput/innerModule is required')
 		if (!innerModule._isModule)
 			throw new Error(`ofInput/innerModule has to be a DataModule subclass (got ${innerModule})`)
 		this.innerModule = innerModule
@@ -239,7 +239,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {Module} = opt
 
 		if (!Module)
-			throw new Error(`opt.Module is required`)
+			throw new Error('opt.Module is required')
 		if (!Module._isModule)
 			throw new Error(`opt.Module has to be a DataModule subclass (got ${Module})`)
 
@@ -262,7 +262,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 		const {ofInput: fields} = config
 		if (!fields)
-			throw new Error(`ofInput/fields is required`)
+			throw new Error('ofInput/fields is required')
 		if (typeof fields !== 'object')
 			throw new Error(`ofInput/fields: expected object (got ${typeof fields})`)
 		

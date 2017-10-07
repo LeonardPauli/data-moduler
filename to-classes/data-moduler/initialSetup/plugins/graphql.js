@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {
 	GraphQLObjectType,
 	GraphQLInputObjectType,
@@ -26,12 +27,12 @@ class GraphQLPlugin extends Plugin {
 	static didRegister () {
 
 		// hook up types
-		ID			.addConverter({ type: GraphQLID })
-		STRING	.addConverter({ type: GraphQLString })
-		BOOLEAN	.addConverter({ type: GraphQLBoolean })
-		DATE		.addConverter({ type: GraphQLString })
-		INT			.addConverter({ type: GraphQLInt })
-		DECIMAL	.addConverter({ type: GraphQLFloat })
+		ID.addConverter({ type: GraphQLID })
+		STRING.addConverter({ type: GraphQLString })
+		BOOLEAN.addConverter({ type: GraphQLBoolean })
+		DATE.addConverter({ type: GraphQLString })
+		INT.addConverter({ type: GraphQLInt })
+		DECIMAL.addConverter({ type: GraphQLFloat })
 
 	}
 

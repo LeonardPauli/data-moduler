@@ -1,3 +1,4 @@
+/* eslint-disable */
 // use in frontend
 import MyAPI from 'my-api'
 import {destinations} from 'data-moduler'
