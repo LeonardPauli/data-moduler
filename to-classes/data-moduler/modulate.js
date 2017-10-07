@@ -1,5 +1,6 @@
 import {performModuleModifications} from './moduleModifications'
 import {dataTypes, getActionInstance} from './dataTypes'
+import plugins from './plugins'
 const {getTypeInstance} = dataTypes
 
 // normalises fields
@@ -36,5 +37,9 @@ const modulate = Module=> {
 
 	Module.moduleModifications = performModuleModifications(
 		Module.moduleModifications, [Module, ...Module.allSubmodules()])
+
+	// TODO: apply plugins?
+	console.warn('wip: will apply all available plugins in registration order')
+	Object.keys(plugins).forEach(key=> plugins[key].apply(Module))
 }
 export default modulate

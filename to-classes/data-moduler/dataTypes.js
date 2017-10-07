@@ -71,12 +71,18 @@ class DataType {
 		return false
 	}
 
-	static addConverter ({ target, targetName, from, to }) {
-		const name = targetName || (target && target.name)
+	static addConverter ({ name, type, toType, fromType, to, from }) {
 		if (!name) throw new Error(`${this.name}.addConverter: name is missing`)
 
-		if (target) Object.defineProperty(this, `$${name}`, { value: target })
+		// ORG.$name
+		if (type) Object.defineProperty(this, `$${name}`, { value: type })
+		// org.asName.bind(org): ()=> new type
+		if (toType) Object.defineProperty(this.prototype, `as${name}`, { value: toType })
+		// ORG.newFromName.bind(ORG): typeInstance=> new ORG
+		if (fromType) Object.defineProperty(this, `newFrom${name}`, { value: fromType })
+		// org.toName.bind(org): value=> myValue
 		if (to) Object.defineProperty(this.prototype, `to${name}`, { value: to })
+		// org.fromName.bind(org): myValue=> value
 		if (from) Object.defineProperty(this.prototype, `from${name}`, { value: from })
 	}
 }

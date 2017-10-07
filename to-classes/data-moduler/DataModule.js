@@ -47,6 +47,8 @@ export const validateAgainstFields = fields=> (value, opt = {})=> {
 	Object.keys(fields).forEach(fieldName=> {
 		const type = fields[fieldName]
 		const rawValue = value[fieldName]
+		// TODO: catch ValidationError, add field info (fieldName)
+		// 	and save -> re-throw an AggregatedValidationError
 		val[fieldName] = type.validate(rawValue, opt)
 	})
 

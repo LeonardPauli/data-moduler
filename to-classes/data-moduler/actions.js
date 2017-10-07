@@ -1,12 +1,14 @@
 import {DataType, getTypeInstance} from './dataTypes'
 
 export class Action {
-	inputType = undefined
-	returnType = undefined
-	defaultFn = undefined
+	inputType
+	returnType
+	defaultFn
+	data
 
 	constructor (config = {}) {
-		const {fn, input, returns, Module} = config
+		const {fn, input, returns, Module, ...data} = config
+		this.data = data
 		
 		if (fn!==void 0) {
 			if (typeof fn!=='function')
@@ -21,11 +23,14 @@ export class Action {
 			this.returnType = getTypeInstance(returns, {Module})
 	}
 
+
+
 	toJSON () {
 		return {
 			input: this.inputType,
 			returns: this.returnType,
 			fn: this.defaultFn,
+			data: this.data,
 		}
 	}
 }
@@ -54,11 +59,12 @@ export const getActionInstance = (objectOrAction, {Module, isGetter})=> {
 		return new (isGetter?Getter:Action)({fn: objectOrAction, Module})
 
 	if (typeof objectOrAction!=='object')
-		throw new Error(`expected Action instance, fn, or config object, but got ${typeof objectOrAction}`)
+		throw new Error(`expected Action instance, fn, or `
+			+`config object, but got ${typeof objectOrAction}`)
 
 	return new (isGetter?Getter:Action)({...objectOrAction, Module})
 
 	// TODO: check cases:
 	// - ql object // ql/querylanguage is a plugin
 
-},
+}

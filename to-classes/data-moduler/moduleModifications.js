@@ -26,10 +26,24 @@ export const performModuleModification = Module=> (modificationObject, merger = 
 	if (typeof modificationObject !== 'object')
 		throw new Error(`Expected object, got ${typeof modificationObject}`)
 
+	const modObj = {...modificationObject}
+	const modules = []
+	if (modObj.requiredModules) {
+		console.warn(`requiredModules check not implemented yet, might cause issues`)
+		delete modObj.requiredModules
+	}
+	const plugins = []
+	if (modObj.requiredPlugins) {
+		console.warn(`requiredPlugins check not implemented yet, might cause issues`
+			+` (try to import the plugins in the order you want to use them)`)
+		delete modObj.requiredPlugins
+	}
+
 	Object.keys(modificationObject).forEach(key=> {
 		const val = modificationObject[key]
 		if (key==='actions') addActions(val, false)
 		else if (key==='getters') addActions(val, true)
+		else if (key==='modify') val({modules, plugins})
 		else {
 			throw new Error(`modificationObject.${key} isn't implemented`)
 		}
