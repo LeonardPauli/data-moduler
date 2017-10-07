@@ -1,3 +1,5 @@
+import context from './context'
+
 const plugins = {}
 export default plugins
 
@@ -7,7 +9,7 @@ class Plugin {
 
 	static didRegister () {}
 
-	static apply (module) {
+	static apply (module, _opt) {
 		const {namespace} = this
 		const key = `$${namespace}`
 		const val = module[key]
@@ -29,6 +31,45 @@ class Plugin {
 		description: 'what it does, how to get started, etc',
 		url: 'http://datamoduler.co',
 	}
+
+	static fix (opt) {
+		return Module=> {
+			// recursively on submodules
+			const modules = [Module, ...Module.allSubmodules]
+			modules.forEach(Module=> {
+				// apply plugin
+				this.apply(Module, opt)
+				
+				// prepare actions for destination ()
+				if (this.getActionContext)
+					this.addActionWrappers(Module)
+			})
+		}
+	}
+
+
+	// Destination
+
+	static getActionContext = null // (context, ...customArgs)=> context
+
+	static getActionWrapper ({Module, action, actionName}) {
+		const normalised = `$${this.namespace}`
+		return (...customArgs)=> {
+			const ctx = context.get({Module, action, actionName})
+			const ctx2 = this.getActionContext(ctx, ...customArgs)
+			return action[normalised](ctx2)
+		}
+	}
+	static addActionWrappers (Module) {
+		const wrapped = `$$${this.namespace}`
+		const wrappAction = (action, actionName)=> {
+			if (action[wrapped]) return
+			action[wrapped] = this.getActionWrapper({Module, action, actionName})
+		}
+
+		Object.keys(Module.actions).forEach(k=> wrappAction(Module.actions[k], k))
+		Object.keys(Module.getters).forEach(k=> wrappAction(Module.getters[k], k))
+	}
 }
 
 Object.defineProperty(plugins, 'Plugin', { value: Plugin })
@@ -39,24 +80,24 @@ const registerPlugin = plugin=> {
 	if (!(plugin instanceof Plugin))
 		throw new Error(`plugin wasn't instanceof Plugin`)
 
-	const {name} = plugin
-	if (typeof name !== 'string' || name.length==0)
-		throw new Error('name required')
+	const {namespace} = plugin
+	if (typeof namespace !== 'string' || namespace.length==0)
+		throw new Error('namespace required')
 
-	if (plugins[name]) {
-		if (plugins[name]==plugin) return
-		throw new Error(`different plugins with name ${name} already registered`)
+	if (plugins[namespace]) {
+		if (plugins[namespace]==plugin) return
+		throw new Error(`different plugins with namespace ${namespace} already registered`)
 	}
 
 	if (plugins.strictPluginCheck) {
 		const keys = 'namespace,targetName,documentation'.split(',')
 		keys.forEach(key=> {
 			if (plugin[key]===Plugin[key])
-				throw new Error(`${plugin.name}.${key} needs to be customised`)
+				throw new Error(`${plugin.namespace}.${key} needs to be customised`)
 		})
 	}
 
-	plugins[name] = plugin
+	plugins[namespace] = plugin
 	plugin.didRegister()
 }
 

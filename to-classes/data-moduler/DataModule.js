@@ -34,6 +34,17 @@ export default class DataModule {
 		return Object.keys(this.submodules).map(k=> this.submodules[k])
 			.reduce((a, Module)=> [...a, Module, ...Module.allSubmodules()], [])
 	}
+
+	static get actionContext () {
+		return {
+			...this.actions,
+			...this.getters,
+			...this.fields,
+			Module: this,
+			// input
+			// self
+		}
+	}
 }
 
 export const validateAgainstFields = fields=> (value, opt = {})=> {

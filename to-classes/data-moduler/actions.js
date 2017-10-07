@@ -1,13 +1,18 @@
-import {DataType, getTypeInstance} from './dataTypes'
+import {getTypeInstance} from './dataTypes'
 
 export class Action {
 	inputType
 	returnType
 	defaultFn
+	fn // wrapped defaultFn
 	data
 
 	constructor (config = {}) {
 		const {fn, input, returns, Module, ...data} = config
+		// const self = (...args)=> self.fn.bind(self)(...args)
+		// self.constructor = this.constructor
+		// Object.freeze(this)
+
 		this.data = data
 		
 		if (fn!==void 0) {
@@ -23,7 +28,11 @@ export class Action {
 			this.returnType = getTypeInstance(returns, {Module})
 	}
 
-
+	get function () {
+		const self = (...args)=> this.fn.bind(this)(...args)
+		self.action = this
+		return self
+	}
 
 	toJSON () {
 		return {

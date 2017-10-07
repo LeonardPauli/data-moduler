@@ -1,5 +1,6 @@
-import {plugins, dataTypes, flags, performModuleModification} from '../index'
+import {plugins, dataTypes, flags, performModuleModification, destinations} from '../index'
 const {Plugin, registerPlugin} = plugins
+const {registerDestination} = destinations
 const {STRING} = dataTypes
 const {registerFlag} = flags
 
@@ -86,7 +87,19 @@ class MyExamplePlugin extends Plugin {
 		const myVal = stringType.toMyExample('hello') // => '!hello'
 		const val = stringType.fromMyExample(myVal) // => 'hello'
 		*/
+	
+
+		// register destinations
+		registerDestination(this)
+		// requires namespace and getActionContext
 	}
+
+	static getActionContext = action=> context=> (...customArgs)=> {
+		const newContext = {...context, args: customArgs}
+		if (action.isGetter) newContext.argsss = true
+		return newContext
+	}
+
 
 	static getSayHello = Module=> (phrase = 'Hello')=>
 		`${phrase} ${Module.name}!`
@@ -117,14 +130,12 @@ class MyExamplePlugin extends Plugin {
 			requiredPlugins: ['crud'],
 			requiredModules: [Module],
 			modify: ({_modules, _plugins})=> {
-				if (!Module.$crud.enabled) return
-				Module.$crud.addMiddleware({
-					namespace: this.namespace,
-					load: ctx=> ctx.next(),
-					list: ctx=> ctx.next(),
-					create: ctx=> ctx.next(),
-					update: ctx=> ctx.next(),
-					delete: ctx=> ctx.next(),
+				// if (!Module.$crud.enabled) return
+				// Module.$crud.helloFromMyExample = true
+
+				Module.getters.sayHello.addDestination({
+					name: this.namespace,
+					fn: context=> context.action.fn(context)+'lalal',
 				})
 			},
 		}]

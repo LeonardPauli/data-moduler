@@ -17,6 +17,8 @@ import {
 	performModuleModifications,
 } from './moduleModifications'
 
+import context from './context'
+
 // only inported to run setup scripts
 import initialSetup from './initialSetup'
 
@@ -29,6 +31,7 @@ export {
 	validateAgainstFields,
 	performModuleModification,
 	performModuleModifications,
+	context,
 }
 
 export default class DataModuler {

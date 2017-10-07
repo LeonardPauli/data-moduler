@@ -1,0 +1,95 @@
+
+
+action
+	fn: context=> pure?
+	ql: context=> query language binding object
+	$namespace: context=> context.module.$namespace.dostuff(context.pure(context))
+	$$namespace: context=> (namespaceSpecific)=> context.action.$namespace({...context, y: namespaceSpecific})
+
+
+# Order of adding plugin decorators
+' Plugins come in multiple types:
+- modifier // ie. crud, custom, ...
+	- to add default fields to all the models, you could either
+		- extend a custom subclass of DataModule and spread super.fields in all of them
+		- or, apply a custom modifier plugin on the RootModule
+			- with moduleModifications, to add eg. ID and createdAt fields on all of them on one swoop
+- store // ie. sequelize, mongose, tmpstore, gunjs, ...
+- middleware // ie. authorise, ...
+- destination // ie. graphql, rest, ...
+- documenter
+
+
+// 1. setup whole API structure w/o platform specific plugins
+@modulate class MyAPI {} 
+
+// 1.2. pass on general data to context (available in actions)
+import {context} from 'data-moduler'
+context.addModifier(ctx=> {
+	const modules = {}
+	MyAPI.allSubmodules.forEach(m=> modules[m.name] = m)
+	return {...ctx, modules}
+})
+// allows User.actions.create.fn = context=> context.modules.Post.create.fn({...})
+
+// 2. add plugins to extension
+
+@markdown.fix()
+@graphql.fix()
+@authorise.fix({default: (context)=> true }) // should be false in production
+@tmpstore.fix({ store: new Store() })
+@crud.fix({ order: '$graphql->$authorise->$tmpstore'.split('->') })
+class MyAPIBackend extends MyAPI {}
+
+// 3. use documenter
+const md = MyAPIBackend.$markdown.getString()
+fs.writeToFile(md, 'documentation.md', err=> console.log(err || 'wrote docs'))
+
+// 4. use destination(s)
+const schema = MyAPIBackend.$graphql.getSchema()
+... use(jwtDecodeExpressMiddleware=> req.user = MyAPIBackend.getUser.fn({token: }))
+... req=> HTTPGraphQL({ schema, root: {req}, ... })
+
+crud({
+	order: '$graphql->$authorise->$tmpstore'.split('->'),
+
+	// if primaryKey is provided, this will work out of the box
+	getIdField: Module=> {
+		const key = Object.keys(Module.fields).find(k=> Module.fields[k].primaryKey)
+		if (!key) throw new Error(`no primary key field found on ${Module.name}`)
+		return {key, field: Module.fields[key]}
+	},
+	getIdAsString: ({data, key, field})=> field.toString(data[key]),
+	}) // modifier, should be ~first
+	didRegister
+		add flag primaryKey
+	- adds crud action w/o fns // ie. input, return types, etc
+	- add to moduleModifications
+		// - requirePlugin: order[n]
+		- requireModule: Module
+		- modify: ()=>
+			- Module.$crud.nextAction = (context)=> {
+				let fn = undefined
+				let nr = n
+				while (++nr<order.length && !(fn = context.action[order[nr]])) {}
+				return fn && ()=> fn(context)
+			}
+			- add actions.x.[order[n]](context): context.Module.$crud.nextAction(context)()
+				if not already def.
+				else, also: actions.x.[order[n]].addedByCrud = true
+tmpstore // store
+	- adds actions.x.$tmpstore(context)
+		if actions.x and actions.x.addedByCrud = true
+authorise // middleware
+	- if actions.x.$authorise // (context) => true/false/msg?
+		add actions.x.$$authorise(context) // checks actions.x.$authorise, then
+			const nextAction = context.Module.$crud.nextAction(context)
+			return nextAction?nextAction(): error
+graphql // destination
+	- if actions.x.$graphql: add actions.x.$$graphql(context) // destination wrapper
+		if not already def.
+	- adds Module.$graphql.getSchema()
+markdown // documenter, should be last
+	- adds Module.$markdown.getString()
+niceDefaultActions // modifier
+	const {...actionInside} = actions.x
