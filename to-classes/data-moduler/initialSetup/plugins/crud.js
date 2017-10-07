@@ -5,7 +5,7 @@ const {isStatic, allowNull, onlyNew} = flags
 
 
 @registerPlugin
-class CrudPlugin extends Plugin {
+export class CrudPlugin extends Plugin {
 	static namespace = 'crud'
 
 	static getAddMiddleware = Module=> middleware=> {

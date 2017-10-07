@@ -4,13 +4,19 @@
   "description": "Automatic generation of database models, rest endpoints and graphql api (all with validations, ease of authentisation and fully customizable) from simple specification \"module\" files",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -q examples/index.js --exec babel-node",
-    "debug": "nodemon examples/index.js --exec babel-node --inspect",
-    "start": "babel-node examples/index.js",
+    "dev": "nodemon -q to-classes/example/test0.js --exec babel-node",
+    "debug": "nodemon to-classes/example/test0.js --exec babel-node --inspect",
+    "test": "node node_modules/jest/bin/jest.js --watch",
     "build": "babel src -d dist/src & babel examples -d dist/examples",
     "serve": "forever dist/index.js",
-    "lint": "eslint --ext .js src,examples"
+
+    "lint:raw": "eslint --fix --ignore-pattern '!.eslintrc.js'",
+    "lint": "eslint --fix --ignore-pattern '!.eslintrc.js' '{{to-classes}/**,.}/*.js'",
+    "lint:nofix": "eslint --ignore-pattern '!.eslintrc.js' '{{to-classes}/**,.}/*.js'",
+    "lint:watch": "onchange '{{to-classes}/**,.}/*.js' -d 200 -w -- yarn lint:raw {{changed}}",
+    "flow": "flow",
+    "flow:stop": "flow stop",
+    "go": "yarn lint:watch & yarn test & subl data-moduler.sublime-project & yarn dev"
   },
   "author": "Leonard Pauli",
   "private": true,
@@ -20,15 +26,29 @@
     "yarn": ">=0.27.5"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-core": "^6.22.1",
-    "babel-eslint": "^7.1.1",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-stage-2": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-react-native-stage-0": "^1.0.1",
+
     "cross-env": "^4.0.0",
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb-base": "^11.1.3",
-    "eslint-plugin-import": "^2.7.0"
+
+    "babel-eslint": "^7.2.3",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-react-native-stage-0": "^1.0.1",
+
+    "eslint": "^4.6.1",
+    "eslint-config-exponent": "^5.1.3",
+    "eslint-plugin-babel": "^4.1.2",
+    "eslint-plugin-flowtype": "^2.35.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-react": "^7.3.0",
+
+    "flow-bin": "0.49.1",
+    "jest-expo": "~20.0.0"
+  },
+  "jest": {
+    "preset": "jest-expo"
   },
   "dependencies": {
     "body-parser": "^1.17.2",

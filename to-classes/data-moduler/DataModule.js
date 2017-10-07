@@ -1,3 +1,5 @@
+/* eslint class-methods-use-this:0 */
+
 export default class DataModule {
 	static _isModule = true
 	static get _isEntity () {

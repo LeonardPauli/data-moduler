@@ -20,6 +20,7 @@ import {
 import context from './context'
 
 // only inported to run setup scripts
+// eslint-disable-next-line no-unused-vars
 import initialSetup from './initialSetup'
 
 export {

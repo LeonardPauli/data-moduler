@@ -1,4 +1,4 @@
-
+/* eslint-disable */
 
 
 // 17 sep: see https://www.graph.cool/

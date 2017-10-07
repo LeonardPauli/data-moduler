@@ -1,3 +1,4 @@
+/* eslint-disable */
 // Created by Leonard Pauli, July 2017
 // Copyright Leonard Pauli, All rights reserved
 
@@ -49,15 +50,15 @@ export default {
 	// tip: set rootValue to {req, res} for unified experience
 	// locked down by default
 	// args are Object.assign({}, req.params, req.query, req.body, )
-	authorised: ({user})=> user.priviisdsdfsdf.indexOf(prividfsdf.admin)
-	authorised: async ({action, args, root: {req: {user}, res}, module})=> false
+	authorised: ({user})=> user.priviisdsdfsdf.indexOf(prividfsdf.admin),
+	authorised: async ({action, args, root: {req: {user}, res}, module})=> false,
 	authorised: async ({action, args, root: {req: {user}, res}, module})=> ({
 		list: true,
-		update: 
+		update: '...',
 	})[action],
 
 	// checked in typeReducer, namespace is plugin.namespace
-	ignore: ({fieldSectionName, namespace})=> fieldSectionName==='mutations' && namespace!='graphql'
+	ignore: ({fieldSectionName, namespace})=> fieldSectionName==='mutations' && namespace!='graphql',
 
 	getters: {
 		// available by default: list
@@ -184,13 +185,13 @@ const User = {
 		shortName: {
 			type: STRING,
 			authorised: ({user, forMutation})=> forMutation
-				? user.insider?.privileges.admin
+				? user.insider && user.insider.privileges.admin
 				: true
 		},
 	},
 	authorised: ({user, forMutation})=> forMutation // generally
-		? user.insider?.privileges.admin
-		: true
+		? user.insider && user.insider.privileges.admin
+		: true,
 	mutations: {
 		copyNameFromUser: {
 			input: ({User})=> OBJECT.of({ // like fields
@@ -215,7 +216,7 @@ const User = {
 				.where('user.id is :id', {id: user.id}),
 			graphql: async ({sql})=> {
 				const packs = await sql()
-				return packs.map(x=> ...)
+				return packs.map(x=> '...')
 			},
 		}
 	}

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // DataModuler as classes and decorators instead of loose json structures
 // created by Leonard Pauli, 1 oct 2017
 
@@ -27,13 +29,11 @@ const localStorage = isReactNative? asyncStorage: localDB
 
 @markdown @mobx @graphql({
 	connect: {
-		url: '...'
+		url: '...',
 	},
-	middlewares: [jwtAuth]
+	middlewares: [jwtAuth],
 }) @localStorage
 class MyAPIFrontend extends MyAPI {}
 
 // computed, or recalculate? (ie. with .get()?)
 MyAPIFrontend.$graphql.execute`...graphql lang using appolo or similar...`
-
-
