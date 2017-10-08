@@ -10,8 +10,8 @@ type baseConfigOpt = {
 	ofInput?: *,
 }
 export class DataType<
-	extraConfigOpt: Object = {},
-	extraValidationOpt: Object = {},
+	extraConfigOpt: Object = {}, // eslint-disable-line no-unused-vars
+	extraValidationOpt: Object = {}, // eslint-disable-line no-unused-vars
 	validationOpt: baseValidationOpt = baseValidationOpt & extraValidationOpt,
 	configOpt: baseConfigOpt & {validateOpt?: Object} =
 		baseConfigOpt & {validateOpt?: validationOpt} & extraConfigOpt,
@@ -152,8 +152,8 @@ export const getTypeInstance = (
 
 
 const registerDataType = (dataType: DataTypeType<*>)=> {
-	if (!(dataType instanceof DataType))
-		throw new Error('dataType wasn\'t instanceof DataType')
+	if (!DataType.isPrototypeOf(dataType))
+		throw new Error('dataType wasn\'t subclass of DataType')
 
 	const {name} = dataType
 	if (typeof name !== 'string' || name.length==0)

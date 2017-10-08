@@ -140,7 +140,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	constructor (config) {
 		super(config)
 
-		const {ofInput} = (config || {})
+		const {ofInput} = config || {}
 		if (ofInput) {
 			if (!(ofInput instanceof Array))
 				throw new Error('ofInput should be array of primitive '
