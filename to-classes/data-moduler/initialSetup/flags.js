@@ -1,3 +1,4 @@
+// @flow
 import {flags} from '../index'
 const {registerFlag} = flags
 

@@ -1,3 +1,4 @@
+// @flow
 import context from './context'
 
 const plugins = {}
@@ -53,10 +54,13 @@ class Plugin {
 	static getActionContext = null // (context, ...customArgs)=> context
 
 	static getActionWrapper ({Module, action, actionName}) {
+		if (!this.getActionContext)
+			throw new Error(`getActionContext not implemented for plugin ${this.namespace}`)
+
 		const normalised = `$${this.namespace}`
 		return (...customArgs)=> {
 			const ctx = context.get({Module, action, actionName})
-			const ctx2 = this.getActionContext(ctx, ...customArgs)
+			const ctx2 = this.getActionContext && this.getActionContext(ctx, ...customArgs)
 			return action[normalised](ctx2)
 		}
 	}
@@ -76,9 +80,9 @@ Object.defineProperty(plugins, 'Plugin', { value: Plugin })
 Object.defineProperty(plugins, 'strictPluginCheck', { value: true, writable: true })
 
 
-const registerPlugin = plugin=> {
-	if (!(plugin instanceof Plugin))
-		throw new Error('plugin wasn\'t instanceof Plugin')
+const registerPlugin = (plugin: typeof Plugin)=> {
+	if (!Plugin.isPrototypeOf(plugin))
+		throw new Error('plugin wasn\'t subclass of Plugin')
 
 	const {namespace} = plugin
 	if (typeof namespace !== 'string' || namespace.length==0)
@@ -92,6 +96,7 @@ const registerPlugin = plugin=> {
 	if (plugins.strictPluginCheck) {
 		const keys = 'namespace,targetName,documentation'.split(',')
 		keys.forEach(key=> {
+			// $FlowFixMe
 			if (plugin[key]===Plugin[key])
 				throw new Error(`${plugin.namespace}.${key} needs to be customised`)
 		})

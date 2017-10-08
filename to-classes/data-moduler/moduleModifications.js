@@ -1,13 +1,39 @@
+// @flow
+import {type DataModuleClassType} from './DataModule'
 import {Action, Getter} from './actions'
 
-const defaultMerger = ({ oldValue, newValue, _key, _parent, _defaultMerger })=> {
+type modificationObjectType = {
+	requiredModules: ?Array<DataModuleClassType>,
+	requiredPlugins: ?Array<*>,
+	modify: ?(opt: {
+		modules: Array<DataModuleClassType>,
+		plugins: Array<*>,
+	})=> void,
+	actions: ?Object,
+	getters: ?Object,
+}
+
+type mergerInputType<T: mixed> = {
+	Module: DataModuleClassType,
+	oldValue: T,
+	newValue: T,
+	key: string,
+	parent: Object,
+	defaultMerger: mergerInputType<T>=> T
+}
+type mergerFnType<T: mixed> = (mergerInputType<T>)=> T
+const defaultMerger:mergerFnType<*> = ({ oldValue, newValue })=> {
 	if (oldValue===void 0 || oldValue===newValue) return newValue
 	return oldValue
 }
-export const performModuleModification = Module=> (modificationObject, merger = defaultMerger)=> {
+export const performModuleModification = (
+	Module: DataModuleClassType,
+	modificationObject: modificationObjectType,
+	merger: mergerFnType<*> = defaultMerger
+)=> {
 	const merge = opt=> merger({Module, oldValue: opt.parent[opt.key], defaultMerger, ...opt})
 
-	const addActions = (actions, isGetter)=> {
+	const addActions = (actions: Object, isGetter)=> {
 		const field = isGetter? Module.getters: Module.actions
 		const Type = isGetter? Getter: Action
 		Object.keys(actions).forEach(actionName=> {
@@ -18,7 +44,7 @@ export const performModuleModification = Module=> (modificationObject, merger = 
 				newValue: new Type(),
 			})
 			Object.keys(props).forEach(key=> {
-				action[key] = merger({ parent: action, key, newValue: props[key] })
+				action[key] = merge({ parent: action, key, newValue: props[key] })
 			})
 		})
 	}
@@ -26,27 +52,29 @@ export const performModuleModification = Module=> (modificationObject, merger = 
 	if (typeof modificationObject !== 'object')
 		throw new Error(`Expected object, got ${typeof modificationObject}`)
 
-	const modObj = {...modificationObject}
+	const {
+		requiredModules,
+		requiredPlugins,
+		actions, getters, modify,
+		...other
+	} = modificationObject
+
 	const modules = []
-	if (modObj.requiredModules) {
+	if (requiredModules) {
 		console.warn(`requiredModules check not implemented yet, might cause issues`)
-		delete modObj.requiredModules
 	}
 	const plugins = []
-	if (modObj.requiredPlugins) {
+	if (requiredPlugins) {
 		console.warn(`requiredPlugins check not implemented yet, might cause issues`
 			+` (try to import the plugins in the order you want to use them)`)
-		delete modObj.requiredPlugins
 	}
 
-	Object.keys(modificationObject).forEach(key=> {
-		const val = modificationObject[key]
-		if (key==='actions') addActions(val, false)
-		else if (key==='getters') addActions(val, true)
-		else if (key==='modify') val({modules, plugins})
-		else {
-			throw new Error(`modificationObject.${key} isn't implemented`)
-		}
+	if (actions) addActions(actions, false)
+	if (getters) addActions(getters, true)
+	if (modify) modify({modules, plugins})
+
+	Object.keys(other).forEach(key=> {
+		throw new Error(`modificationObject.${key} isn't implemented`)
 	})
 }
 
@@ -62,10 +90,15 @@ export const performModuleModification = Module=> (modificationObject, merger = 
 // 	- on self from self
 // 	- on self from submodules + submodules children recursively
 // 	...thereby performing all modifications matching self's submodule tree
-export const performModuleModifications = (modifications, availableModules)=>
+export const performModuleModifications = (
+	modifications: Array<{
+		Module: DataModuleClassType,
+		modificationObject: modificationObjectType}>,
+	availableModules: Array<DataModuleClassType>
+)=>
 	modifications.filter(modification=> {
 		const {Module, modificationObject} = modification
-		if (!availableModules.indexOf(Module)>=0) return true
+		if (availableModules.indexOf(Module)==-1) return true
 		performModuleModification(Module, modificationObject)
 		return false
 	})

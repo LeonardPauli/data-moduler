@@ -1,7 +1,22 @@
-const dataTypes = {}
-export default dataTypes
+// @flow
+import {type DataModuleClassType} from './DataModule'
 
-class DataType {
+type baseValidationOpt = {
+	usageType?: string,
+}
+type baseConfigOpt = {
+	allowNull?: boolean | Object,
+	default?: *,
+	ofInput?: *,
+}
+export class DataType<
+	extraConfigOpt: Object = {},
+	extraValidationOpt: Object = {},
+	validationOpt: baseValidationOpt = baseValidationOpt & extraValidationOpt,
+	configOpt: baseConfigOpt & {validateOpt?: Object} =
+		baseConfigOpt & {validateOpt?: validationOpt} & extraConfigOpt,
+> {
+	name: string
 	allowNull = {default: false}
 	defaultValue = undefined
 	ofInput = undefined // used in some data types
@@ -15,12 +30,14 @@ class DataType {
 	}
 
 	static supportsOfInput = false
-	static of (ofInput, config={}) {
-		return new this({...config, ofInput})
+	static of (ofInput, config?: configOpt) {
+		if (config) return new this({...config, ofInput})
+		// $FlowFixMe
+		return new this({ofInput})
 	}
 
-	constructor (config = {}) {
-		const {allowNull, default: defaultValue, ofInput} = config
+	constructor (config?: configOpt) {
+		const {allowNull, default: defaultValue, ofInput, validateOpt} = config || {}
 
 		if (allowNull!==void 0) {
 			if (typeof allowNull === 'boolean')
@@ -33,7 +50,8 @@ class DataType {
 			this.allowNull = {default: true}
 
 		if (defaultValue!==void 0) {
-			this.defaultValue = this.validate(defaultValue)
+			// $FlowFixMe
+			this.defaultValue = this.validate(defaultValue, validateOpt)
 			// if (defaultValue===null && !this.allowNull.default)
 			// 	throw new Error('!allowNull but defaultValue=null? '
 			// 		+'set defaultValue to undefined or change/remove allowNull property')
@@ -47,7 +65,8 @@ class DataType {
 
 	}
 
-	validate (value, {usageType = 'default'} = {}) {
+	validate (value: *, opt: validationOpt) {
+		const {usageType = 'default'} = opt || {}
 		const {defaultValue} = this
 		const allowNull = typeof this.allowNull[usageType] === 'boolean'
 			? this.allowNull[usageType]: this.allowNull.default
@@ -57,7 +76,7 @@ class DataType {
 			typeof defaultValue==='function' ? defaultValue(): defaultValue
 		if (val===void 0 || val===null) {
 			if (allowNull) return val
-			throw new Error(`value=${val} but allowNull=${allowNull}`)
+			throw new Error(`value=${String(val)} but allowNull=${String(allowNull)}`)
 		}
 
 		return val
@@ -86,53 +105,53 @@ class DataType {
 		if (from) Object.defineProperty(this.prototype, `from${name}`, { value: from })
 	}
 }
+export type DataTypeType<extraConfigOpt = {}, extraValidationOpt = {}> =
+	DataType<extraConfigOpt, extraValidationOpt>
 
-const helpers = {
-	DataType,
-	findMatchingType: (value, key)=> dataTypes.asList.find(d=> d.matchesRawType(value, key)),
-	getType: (rawType, key)=> rawType instanceof DataType
-		? rawType: dataTypes.findMatchingType(rawType, key),
 
-	// normalize type field into type instance
-	getTypeInstance: (objectOrRawType, {Module})=> {
 
-		// new STRING({...config})
-		if (objectOrRawType instanceof DataType)
-			return objectOrRawType
+// normalize type field into type instance
+export const getTypeInstance = (
+	objectOrRawTypeOrType: DataType<*> | Object,
+	{Module}: {Module: DataModuleClassType}
+)=> {
 
-		// String | STRING | User | ...
-		if (typeof objectOrRawType!=='object') {
-			const Type = dataTypes.findMatchingType(objectOrRawType)
-			if (!Type) throw new Error(`no matching data type found for ${objectOrRawType}`)
-			return new Type({Module})
-		}
+	// new STRING({...config})
+	if (objectOrRawTypeOrType instanceof DataType)
+		return objectOrRawTypeOrType
 
-		// {type: String, ...config}
-		if (objectOrRawType.type!==void 0) {
-			const {type, ...config} = objectOrRawType
-			const Type = dataTypes.findMatchingType(type)
-			if (!Type) throw new Error(`no matching data type found for ${objectOrRawType}`)
-			return new Type({...config, Module})
-		}
-		
-		// {String, ...config}
-		const config = {}
-		const Type = Object.keys(objectOrRawType).reduce((p, k)=> {
-			const val = objectOrRawType[k]
-			const ret = p || dataTypes.findMatchingType(val, k)
-			if (p) config[k] = val
-			return ret
-		}, null)
+	// eslint-disable-next-line no-extra-parens
+	const objectOrRawType = (objectOrRawTypeOrType: Object)
+
+	// String | STRING | User | ...
+	if (typeof objectOrRawType!=='object') {
+		const Type = dataTypes.findMatchingType(objectOrRawType)
 		if (!Type) throw new Error(`no matching data type found for ${objectOrRawType}`)
+		return new Type({Module})
+	}
+
+	// {type: String, ...config}
+	if (objectOrRawType.type!==void 0) {
+		const {type, ...config} = objectOrRawType
+		const Type = dataTypes.findMatchingType(type)
+		if (!Type) throw new Error(`no matching data type found for ${String(objectOrRawType)}`)
 		return new Type({...config, Module})
-	},
+	}
+		
+	// {String, ...config}
+	const config = {}
+	const Type = Object.keys(objectOrRawType).reduce((p, k)=> {
+		const val = objectOrRawType[k]
+		const ret = p || dataTypes.findMatchingType(val, k)
+		if (p) config[k] = val
+		return ret
+	}, null)
+	if (!Type) throw new Error(`no matching data type found for ${String(objectOrRawType)}`)
+	return new Type({...config, Module})
 }
 
-Object.keys(helpers).forEach(k=>
-	Object.defineProperty(dataTypes, k, {value: helpers[k]}))
 
-
-const registerDataType = dataType=> {
+const registerDataType = (dataType: DataTypeType<*>)=> {
 	if (!(dataType instanceof DataType))
 		throw new Error('dataType wasn\'t instanceof DataType')
 
@@ -154,9 +173,34 @@ const registerDataType = dataType=> {
 	dataTypes[name] = dataType
 }
 
-Object.defineProperty(dataTypes, 'registerDataType', { value: registerDataType })
-
-Object.defineProperty(dataTypes, 'asList', { get: ()=>
-	Object.keys(dataTypes).map(k=> dataTypes[k]) })
 // Object.defineProperty(dataTypes, 'allAliases', { get: ()=>
 // 	dataTypes.asList.reduce((a, d)=> a.concat(d.aliases), []) })
+
+const findMatchingType = (value: *, key: ?string)=>
+	dataTypes.asList.find(d=> d.matchesRawType(value, key))
+
+const getType = <T: Object>(rawType: DataTypeType<T> | Object, key: ?string): ?DataTypeType<T>=>
+	rawType instanceof DataType ? rawType: dataTypes.findMatchingType(rawType, key)
+
+
+
+type dataTypesType = {
+	DataType: typeof DataType,
+	getTypeInstance: typeof getTypeInstance,
+	registerDataType: typeof registerDataType,
+	findMatchingType: typeof findMatchingType,
+	getType: typeof getType,
+	asList: ()=> Array<DataTypeType<*>>,
+	[key: string]: DataTypeType<*>,
+}
+const dataTypes: dataTypesType = ((Object.defineProperties({}, { // eslint-disable-line no-extra-parens
+	DataType: { value: DataType },
+	getTypeInstance: { value: getTypeInstance },
+	registerDataType: { value: registerDataType },
+	findMatchingType: { value: findMatchingType },
+	getType: { value: getType },
+	asList: ({ // eslint-disable-line no-extra-parens
+		get: ()=> Object.keys(dataTypes).map(k=> dataTypes[k]),
+	}: Object),
+}): any): dataTypesType)
+export default dataTypes

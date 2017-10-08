@@ -1,11 +1,16 @@
+// @flow
+import {type DataModuleClassType} from './DataModule'
 import {performModuleModifications} from './moduleModifications'
-import {dataTypes, getActionInstance} from './dataTypes'
+import {DataType, getTypeInstance} from './dataTypes'
+import {getActionInstance, Action} from './actions'
 import plugins from './plugins'
-const {getTypeInstance} = dataTypes
 
 // normalises fields
 // text: String, -> text: new STRING(config),
-export const modulateFields = ({Module, fields})=> {
+export const modulateFields = ({Module, fields}: {
+	Module: DataModuleClassType,
+	fields: {[string]: DataType<*> | Object}
+})=> {
 	const resFields = {}
 	Object.keys(fields).forEach(fieldName=> {
 		const objectOrRawType = fields[fieldName]
@@ -18,7 +23,11 @@ export const modulateFields = ({Module, fields})=> {
 // normalises actions
 // ql/querylanguage is a plugin
 // create: ql | new Action(config) | fn | config, -> create: new Action(config),
-export const modulateActions = ({Module, fields, isGetter})=> {
+export const modulateActions = ({Module, fields, isGetter}: {
+	Module: DataModuleClassType,
+	fields: {[string]: Action | Object},
+	isGetter: boolean,
+})=> {
 	const resFields = {}
 	Object.keys(fields).forEach(fieldName=> {
 		const objectOrAction = fields[fieldName]
@@ -30,7 +39,7 @@ export const modulateActions = ({Module, fields, isGetter})=> {
 
 // normalises fields and actions/getters
 // + executes moduleModifications matching self's submodule tree
-const modulate = Module=> {
+const modulate = (Module: DataModuleClassType)=> {
 	Module.fields = modulateFields({Module, fields: Module.fields})
 	Module.actions = modulateFields({Module, fields: Module.actions})
 	Module.getters = modulateFields({Module, fields: Module.getters, isGetter: true})

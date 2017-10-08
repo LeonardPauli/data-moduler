@@ -1,27 +1,31 @@
 /* eslint no-unused-vars: 0 */
+// @flow
 
-import DataModule, {validateAgainstFields} from '../DataModule'
-import dataTypes from '../dataTypes'
-const {DataType, registerDataType, getType} = dataTypes
+import DataModule, {validateAgainstFields, type DataModuleClassType} from '../DataModule'
+import dataTypes, {DataType} from '../dataTypes'
+const {registerDataType, getType} = dataTypes
 
 import {emojiRegex, emailRegexes} from './regexes'
 
 
-@registerDataType class ANY extends DataType {}
+@registerDataType class ANY extends DataType<*> {}
 
 
 // String
 
-@registerDataType class STRING extends DataType {
+@registerDataType class STRING extends DataType<{
+	disallowEmoji?: boolean,
+	regex?: RegExp,
+}> {
 	static emojiRegex = emojiRegex
 	disallowEmoji = false
 	regex = undefined
 
 	toJSON () {
-		return { ...super.toJSON, disallowEmoji: this.disallowEmoji, regex: this.regex }
+		return { ...super.toJSON(), disallowEmoji: this.disallowEmoji, regex: this.regex }
 	}
 
-	constructor (config = {}) {
+	constructor (config) {
 		super(config)
 
 		const {disallowEmoji} = config
@@ -46,7 +50,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const val = super.validate(value, opt)
 		if (typeof val!=='string')
 			throw new Error(`expected string, but typeof val==='${typeof val}'`)
-		if (this.disallowEmoji && this.emojiRegex.test(val))
+		if (this.disallowEmoji && this.constructor.emojiRegex.test(val))
 			throw new Error(`disallowEmoji=${this.disallowEmoji}, but string contained emoji`)
 		if (this.regex && !this.regex.test(val))
 			throw new Error('value failed regex validation')
@@ -98,7 +102,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 // Lists
 
 @registerDataType class LIST extends DataType {
-	innerType = ANY
+	innerType: DataType<*> = new ANY()
 
 	static supportsOfInput = true
 	constructor (config = {}) {
@@ -123,23 +127,20 @@ import {emojiRegex, emailRegexes} from './regexes'
 	}
 
 	validate (value, opt) {
-		const val = this.innerType.validate(value, opt)
-		const {returnIndex} = opt
-		const {values} = this
-		const idx = values.indexOf(val)
-		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${values})`)
-		return returnIndex? idx: val
+		return this.innerType.validate(value, opt)
 	}
 }
 
-@registerDataType class ENUM extends DataType {
+@registerDataType class ENUM extends DataType<*, {
+	returnIndex?: boolean,
+}> {
 	values = []
 
 	static supportsOfInput = true
-	constructor (config = {}) {
+	constructor (config) {
 		super(config)
 
-		const {ofInput} = config
+		const {ofInput} = (config || {})
 		if (ofInput) {
 			if (!(ofInput instanceof Array))
 				throw new Error('ofInput should be array of primitive '
@@ -161,10 +162,10 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 	validate (value, opt) {
 		const val = super.validate(value, opt)
-		const {returnIndex} = opt
+		const returnIndex = (opt && opt.returnIndex===true) || false
 		const {values} = this
 		const idx = values.indexOf(val)
-		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${values})`)
+		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${String(values)})`)
 		return returnIndex? idx: val
 	}
 }
@@ -195,8 +196,10 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 // Module / object
 
-@registerDataType class MODULE extends DataType {
-	innerModule = undefined
+@registerDataType class MODULE extends DataType<*, {
+	Module: DataModuleClassType,
+}> {
+	innerModule: DataModuleClassType
 
 	static supportsOfInput = true
 	constructor (config) {
@@ -233,7 +236,9 @@ import {emojiRegex, emailRegexes} from './regexes'
 	}
 }
 
-@registerDataType class SELF extends DataType {
+@registerDataType class SELF extends DataType<{
+	Module: DataModuleClassType,
+}, *> {
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		const {Module} = opt
@@ -253,7 +258,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	objectName = undefined // used by some destinations, ie. graphql, needs to be unique
 
 	toJSON () {
-		return { ...super.toJSON, objectName: this.objectName }
+		return { ...super.toJSON(), objectName: this.objectName }
 	}
 
 	static supportsOfInput = true
@@ -279,8 +284,10 @@ import {emojiRegex, emailRegexes} from './regexes'
 	}
 
 	validate (value, opt) {
+		const {ofInput: fields} = this
 		const val = super.validate(value, opt)
-		return validateAgainstFields(this.fields)(val, opt)
+		// $FlowFixMe
+		return validateAgainstFields(fields)(val, opt)
 	}
 }
 
@@ -291,7 +298,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 @registerDataType class URL extends STRING {}
 
 @registerDataType class EMAIL extends STRING {
-	constructor (config = {}) {
+	constructor (config) {
 		super(config)
 
 		const {strictCheck} = config

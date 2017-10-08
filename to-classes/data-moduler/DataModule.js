@@ -1,4 +1,6 @@
+// @flow
 /* eslint class-methods-use-this:0 */
+import {type DataTypeType} from './dataTypes'
 
 export default class DataModule {
 	static _isModule = true
@@ -29,6 +31,7 @@ export default class DataModule {
 	// }
 
 	static validate (value, opt = {}) {
+		// $FlowFixMe
 		return validateAgainstFields(this.fields)(value, {Module: this, ...opt})
 	}
 
@@ -48,8 +51,12 @@ export default class DataModule {
 		}
 	}
 }
+export type DataModuleType = DataModule
+export type DataModuleClassType = typeof DataModule
 
-export const validateAgainstFields = fields=> (value, opt = {})=> {
+export const validateAgainstFields = <validateOpt: *>(
+	fields: {[string]: DataTypeType<*, validateOpt>}
+)=> (value: *, opt: validateOpt)=> {
 	// if (typeof value==='function')
 	// 	value = value(opt)
 

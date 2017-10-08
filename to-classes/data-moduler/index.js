@@ -1,6 +1,7 @@
 // data-moduler
 // Created by Leonard Pauli, July 2017 (to-classes started 1 oct)
 // Copyright Leonard Pauli, All rights reserved
+// @flow
 
 import DataModule, {validateAgainstFields} from './DataModule'
 

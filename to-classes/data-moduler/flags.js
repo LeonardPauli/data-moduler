@@ -1,7 +1,9 @@
+// @flow
+
 const flags = {}
 export default flags
 
-const registerFlag = (name, flag)=> {
+const registerFlag = (name: string, flag: *)=> {
 	if (typeof name !== 'string' || name.length==0)
 		throw new Error('name required')
 

@@ -1,3 +1,5 @@
+// @flow
+
 const destinations = {}
 export default destinations
 
@@ -5,8 +7,13 @@ export default destinations
 // }
 // Object.defineProperty(destinations, 'Destination', { value: Destination })
 
+interface destinationInterface {
+	namespace: string,
+	name: string,
+	getActionContext: (context: Object, ...customArgs: *)=> Object,
+}
 
-const registerDestination = destination=> {
+const registerDestination = (destination: destinationInterface)=> {
 	// if (!(destination instanceof Destination))
 	// 	throw new Error(`destination wasn't instanceof Destination`)
 

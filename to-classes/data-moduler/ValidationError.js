@@ -1,7 +1,9 @@
+// @flow
+
 export default class ValidationError extends Error {
 	message = ''
 
-	constructor (props) {
+	constructor (props: string) {
 		super(props)
 		
 		if (typeof props === 'string')

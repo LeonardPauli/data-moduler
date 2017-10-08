@@ -1,13 +1,18 @@
-import {getTypeInstance} from './dataTypes'
+// @flow
+import {getTypeInstance, type DataTypeType} from './dataTypes'
+import {type DataModuleClassType} from './DataModule'
+
 
 export class Action {
-	inputType
-	returnType
-	defaultFn
-	fn // wrapped defaultFn
-	data
+	static isGetter = false
 
-	constructor (config = {}) {
+	inputType: DataTypeType<*>
+	returnType: DataTypeType<*>
+	defaultFn: mixed=> *
+	fn: Object=> * // wrapped defaultFn
+	data: Object
+
+	constructor (config: Object = {}) {
 		const {fn, input, returns, Module, ...data} = config
 		// const self = (...args)=> self.fn.bind(self)(...args)
 		// self.constructor = this.constructor
@@ -28,7 +33,7 @@ export class Action {
 			this.returnType = getTypeInstance(returns, {Module})
 	}
 
-	get function () {
+	get function (): (*)=> * {
 		const self = (...args)=> this.fn.bind(this)(...args)
 		self.action = this
 		return self
@@ -43,6 +48,7 @@ export class Action {
 		}
 	}
 }
+export type ActionType = Action
 
 export class Getter extends Action {
 	static isGetter = true
@@ -53,13 +59,16 @@ export class Getter extends Action {
 }
 
 // normalize action field into action instance
-export const getActionInstance = (objectOrAction, {Module, isGetter})=> {
+export const getActionInstance = (
+	objectOrAction: Object | Action,
+	{Module, isGetter}: {Module: DataModuleClassType, isGetter: boolean}
+)=> {
 
 	// new Action({...config})
 	if (objectOrAction instanceof Action) {
 		if (objectOrAction.constructor.isGetter != isGetter)
-			throw new Error(`expected action.isGetter to be ${!!isGetter}, `
-				+`but got ${!!objectOrAction.constructor.isGetter}`)
+			throw new Error(`expected action.isGetter to be ${String(!!isGetter)}, `
+				+`but got ${String(!!objectOrAction.constructor.isGetter)}`)
 		return objectOrAction
 	}
 
