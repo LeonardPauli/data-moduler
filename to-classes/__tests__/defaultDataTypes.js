@@ -3,15 +3,13 @@
 import {dataTypes} from '../data-moduler'
 
 describe('default dataTypes', ()=> {
-	const {DataType} = dataTypes
-
 	it('ANY', ()=> { expect(dataTypes.ANY).not.toBe(undefined) })
 	
 	describe('STRING', ()=> {
 		const {STRING} = dataTypes
 		it('exists', ()=> expect(STRING).not.toBe(undefined))
-		let type
-		it('instantiates', ()=> expect(type = new STRING()).not.toBe(undefined))
+		it('instantiates', ()=> expect(new STRING()).not.toBe(undefined))
+		const type = new STRING()
 		it('validates', ()=> expect(type.validate('asd')).toBe('asd'))
 		it('validate throws', ()=> expect(()=> type.validate(4)).toThrow())
 		it('validates regex')

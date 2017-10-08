@@ -19,7 +19,7 @@ type mergerInputType<T: mixed> = {
 	newValue: T,
 	key: string,
 	parent: Object,
-	defaultMerger: mergerInputType<T>=> T
+	defaultMerger: mergerInputType<T>=> T,
 }
 type mergerFnType<T: mixed> = (mergerInputType<T>)=> T
 const defaultMerger:mergerFnType<*> = ({ oldValue, newValue })=> {

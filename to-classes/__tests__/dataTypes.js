@@ -196,7 +196,7 @@ describe('dataTypes', ()=> {
 	describe('getTypeInstance', ()=> {
 		it('is defined', ()=> expect(typeof getTypeInstance).toBe('function'))
 
-		describe('formatting variations', ()=> {
+		describe('formatting variations (for classes)', ()=> {
 			const {STRING} = dataTypes
 			const toTest = {
 				'{STRING}': {STRING},
@@ -229,10 +229,40 @@ describe('dataTypes', ()=> {
 				}))
 			})
 		})
+
+		describe('from instances', ()=> {
+			const {STRING} = dataTypes
+			const orgType = new STRING({allowNull: true})
+			it('returns the instance; orgType', ()=> {
+				const type = getTypeInstance(orgType)
+				expect(type).toBe(orgType)
+			})
+			it('returns the instance; {type: orgType}', ()=> {
+				const type = getTypeInstance({type: orgType})
+				expect(type).toBe(orgType)
+			})
+			it('creates new instance with extended config; {type: orgType, ...config}', ()=> {
+				const type = getTypeInstance({type: orgType, default: 5})
+				expect(type.allowNull.default).toBe(true)
+				expect(type.defaultValue).toBe(5)
+			})
+		})
+
 	})
+
 	const {registerDataType} = dataTypes
 	describe('registerDataType', ()=> {
 		it('is defined', ()=> expect(typeof registerDataType).toBe('function'))
+
+		class Thing {}
+
+		class MyCustomType extends DataType<{}, {}> {
+			static matchesRawType (value, key) {
+				return value instanceof Thing || super.matchesRawType(value, key)
+			}
+		}
+
+		// it('can call register', ()=> expect(registerDataType(MyCustomType)).toBe(undefined))
 
 	})
 	const {findMatchingType} = dataTypes

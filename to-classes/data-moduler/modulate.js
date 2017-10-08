@@ -9,7 +9,7 @@ import plugins from './plugins'
 // text: String, -> text: new STRING(config),
 export const modulateFields = ({Module, fields}: {
 	Module: DataModuleClassType,
-	fields: {[string]: DataType<*> | Object}
+	fields: {[string]: DataType<*> | Object},
 })=> {
 	const resFields = {}
 	Object.keys(fields).forEach(fieldName=> {

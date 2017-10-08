@@ -16,30 +16,10 @@ describe('flags', ()=> {
 	})
 })
 
-describe('plugins', ()=> {
-
-})
-
-describe('destinations', ()=> {
-
-})
-
-describe('actions', ()=> {
-
-})
-
-describe('modulate', ()=> {
-
-})
-
-describe('moduleModifications', ()=> {
-
-})
-
-describe('context', ()=> {
-
-})
-
-describe('ValidationError', ()=> {
-
-})
+describe('plugins')
+describe('destinations')
+describe('actions')
+describe('modulate')
+describe('moduleModifications')
+describe('context')
+describe('ValidationError')

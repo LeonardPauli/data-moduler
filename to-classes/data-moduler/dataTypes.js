@@ -150,7 +150,7 @@ export const getTypeInstance = (
 }
 
 
-const registerDataType = (dataType: typeof DataType)=> {
+const registerDataType = (dataType: Class<DataType<*, *>>)=> {
 	if (!DataType.isPrototypeOf(dataType))
 		throw new Error('dataType wasn\'t subclass of DataType')
 
@@ -190,7 +190,7 @@ type dataTypesType = {
 	findMatchingType: typeof findMatchingType,
 	getType: typeof getType,
 	asList: ()=> Array<DataTypeType<*>>,
-	[key: string]: typeof DataType,
+	[key: string]: Class<DataType<*, *>>,
 }
 const dataTypes: dataTypesType = ((Object.defineProperties({}, { // eslint-disable-line no-extra-parens
 	DataType: { value: DataType },

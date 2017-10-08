@@ -1,7 +1,7 @@
 // @flow
 /* eslint-disable no-console */
 
-import {flags, dataTypes} from '../data-moduler'
+import {flags} from '../data-moduler'
 
 const expect = (fn: ()=> mixed, rej?: Error=> mixed)=>
 	new Promise(res=> res(fn())).catch(err=> ({err})).then(res=> {
