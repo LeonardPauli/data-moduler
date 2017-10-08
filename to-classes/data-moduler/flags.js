@@ -1,8 +1,5 @@
 // @flow
 
-const flags = {}
-export default flags
-
 const registerFlag = (name: string, flag: *)=> {
 	if (typeof name !== 'string' || name.length==0)
 		throw new Error('name required')
@@ -15,4 +12,10 @@ const registerFlag = (name: string, flag: *)=> {
 	flags[name] = flag
 }
 
-Object.defineProperty(flags, 'registerFlag', { value: registerFlag })
+const flags: {
+	[name: string]: mixed,
+	registerFlag: typeof registerFlag,
+} = Object.defineProperties({}, {
+	registerFlag: { value: registerFlag },
+})
+export default flags
