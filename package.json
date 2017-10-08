@@ -8,6 +8,7 @@
     "dev": "nodemon -q to-classes/example/test0.js --exec babel-node",
     "debug": "nodemon to-classes/example/test0.js --exec babel-node --inspect",
     "test": "jest --watch",
+    "test:coverage": "jest --coverage",
     "build": "babel src -d dist/src & babel examples -d dist/examples",
     "serve": "forever dist/index.js",
     "lint:raw": "eslint --fix --ignore-pattern '!.eslintrc.js'",

@@ -139,7 +139,7 @@ module.exports = {
 			ignoreTrailingComments: true,
 		}],
 		'max-lines': ['warn', 400],
-		'max-nested-callbacks': ['error', { max: 4 }],
+		'max-nested-callbacks': ['warn', { max: 4 }],
 		'max-params': ['warn', 5],
 		'max-statements': ['warn', 30, { ignoreTopLevelFunctions: true }],
 		'max-statements-per-line': ['warn', { max: 3 }],

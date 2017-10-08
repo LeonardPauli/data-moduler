@@ -24,7 +24,7 @@ export class DataType<
 	toJSON () {
 		return {
 			allowNull: this.allowNull,
-			defaultValue: this.defaultValue,
+			default: this.defaultValue,
 			ofInput: this.ofInput,
 		}
 	}
@@ -46,15 +46,13 @@ export class DataType<
 				this.allowNull = allowNull
 			else throw new Error(`typeof allowNull === ${typeof allowNull}, `
 				+'but expected undefined, boolean, or object')
-		} else if (this.defaultValue===null)
+		} else if (defaultValue===null)
 			this.allowNull = {default: true}
 
 		if (defaultValue!==void 0) {
 			// $FlowFixMe
-			this.defaultValue = this.validate(defaultValue, validateOpt)
-			// if (defaultValue===null && !this.allowNull.default)
-			// 	throw new Error('!allowNull but defaultValue=null? '
-			// 		+'set defaultValue to undefined or change/remove allowNull property')
+			this.validate(defaultValue, validateOpt) // will throw if validation error
+			this.defaultValue = defaultValue // because it can be a factor function
 		}
 
 		if (ofInput!==void 0) {
@@ -75,7 +73,7 @@ export class DataType<
 		const val = value!==void 0? value:
 			typeof defaultValue==='function' ? defaultValue(): defaultValue
 		if (val===void 0 || val===null) {
-			if (allowNull) return val
+			if (allowNull) return null // val
 			throw new Error(`value=${String(val)} but allowNull=${String(allowNull)}`)
 		}
 
@@ -84,9 +82,10 @@ export class DataType<
 
 	// could be used to dynamically match, eg. see MODULE data type
 	// 	or for native type aliases, eg. see STRING data type
-	static matchesRawType (value, key) {
-		if (value instanceof this) return true
-		if (key==this.name) return this
+	static matchesRawType (value, key: ?string) {
+		if (value && value.constructor === this) return true
+		if (value === this) return true
+		if (key==this.name) return true
 		return false
 	}
 
@@ -113,7 +112,7 @@ export type DataTypeType<extraConfigOpt = {}, extraValidationOpt = {}> =
 // normalize type field into type instance
 export const getTypeInstance = (
 	objectOrRawTypeOrType: DataType<*> | Object,
-	{Module}: {Module: DataModuleClassType}
+	{Module}: {Module?: DataModuleClassType} = {}
 )=> {
 
 	// new STRING({...config})
@@ -151,7 +150,7 @@ export const getTypeInstance = (
 }
 
 
-const registerDataType = (dataType: DataTypeType<*>)=> {
+const registerDataType = (dataType: typeof DataType)=> {
 	if (!DataType.isPrototypeOf(dataType))
 		throw new Error('dataType wasn\'t subclass of DataType')
 
@@ -191,7 +190,7 @@ type dataTypesType = {
 	findMatchingType: typeof findMatchingType,
 	getType: typeof getType,
 	asList: ()=> Array<DataTypeType<*>>,
-	[key: string]: DataTypeType<*>,
+	[key: string]: typeof DataType,
 }
 const dataTypes: dataTypesType = ((Object.defineProperties({}, { // eslint-disable-line no-extra-parens
 	DataType: { value: DataType },

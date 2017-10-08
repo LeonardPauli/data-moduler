@@ -28,14 +28,14 @@ import {emojiRegex, emailRegexes} from './regexes'
 	constructor (config) {
 		super(config)
 
-		const {disallowEmoji} = config
+		const {disallowEmoji} = config || {}
 		if (disallowEmoji!==void 0) {
 			if (typeof disallowEmoji !== 'boolean')
 				throw new Error(`disallowEmoji: expected boolean, got ${typeof disallowEmoji}`)
 			this.disallowEmoji = disallowEmoji
 		}
 
-		const {regex} = config
+		const {regex} = config || {}
 		if (regex!==void 0) {
 			if (!(regex instanceof RegExp))
 				throw new Error(`regex: expected instanceof RegExp (got ${regex})`)
@@ -105,10 +105,10 @@ import {emojiRegex, emailRegexes} from './regexes'
 	innerType: DataType<*> = new ANY()
 
 	static supportsOfInput = true
-	constructor (config = {}) {
+	constructor (config) {
 		super(config)
 
-		const {ofInput: rawInnerType} = config
+		const {ofInput: rawInnerType} = config || {}
 		if (rawInnerType) {
 			const innerType = getType(rawInnerType)
 			if (!innerType) throw new Error('no matching type '
@@ -205,7 +205,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	constructor (config) {
 		super(config)
 
-		const {ofInput: innerModule} = config
+		const {ofInput: innerModule} = config || {}
 		if (!innerModule)
 			throw new Error('ofInput/innerModule is required')
 		if (!innerModule._isModule)
@@ -265,13 +265,13 @@ import {emojiRegex, emailRegexes} from './regexes'
 	constructor (config) {
 		super(config)
 
-		const {ofInput: fields} = config
+		const {ofInput: fields} = config || {}
 		if (!fields)
 			throw new Error('ofInput/fields is required')
 		if (typeof fields !== 'object')
 			throw new Error(`ofInput/fields: expected object (got ${typeof fields})`)
 		
-		const {name: objectName} = config
+		const {name: objectName} = config || {}
 		if (objectName !== void 0) {
 			if (typeof objectName !== 'string' && typeof objectName !== 'function')
 				throw new Error(`ofInput/name: expected string (or ()=> string) (got ${typeof objectName})`)
@@ -301,7 +301,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	constructor (config) {
 		super(config)
 
-		const {strictCheck} = config
+		const {strictCheck} = config || {}
 		if (strictCheck!==void 0) {
 			if (typeof strictCheck !== 'boolean')
 				throw new Error(`strictCheck: expected boolean, got ${typeof strictCheck}`)
