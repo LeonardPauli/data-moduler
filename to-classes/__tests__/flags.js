@@ -1,3 +1,5 @@
+// @flow
+
 import {flags} from '../data-moduler'
 
 describe('flags', ()=> {
@@ -7,6 +9,9 @@ describe('flags', ()=> {
 			flags.registerFlag('myFlag', 87)
 			expect(flags.myFlag).toBe(87)
 		})
+		it('requires name', ()=> {
+			expect(()=> flags.registerFlag('', 87)).toThrow('name required')
+		})
 		it('skipps re-registration', ()=> {
 			flags.registerFlag('myFlag', 87)
 		})
@@ -15,11 +20,3 @@ describe('flags', ()=> {
 		})
 	})
 })
-
-describe('plugins')
-describe('destinations')
-describe('actions')
-describe('modulate')
-describe('moduleModifications')
-describe('context')
-describe('ValidationError')

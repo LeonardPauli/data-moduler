@@ -286,7 +286,6 @@ describe('dataTypes', ()=> {
 		it('is defined', ()=> expect(typeof getType).toBe('function'))
 
 		it('finds custom type', ()=> expect(findMatchingType(new MyCustomType())).toBe(MyCustomType))
-
 		it('todo')
 	})
 })

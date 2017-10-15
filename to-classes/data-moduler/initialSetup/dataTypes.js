@@ -3,7 +3,7 @@
 
 import DataModule, {validateAgainstFields, type DataModuleClassType} from '../DataModule'
 import dataTypes, {DataType} from '../dataTypes'
-const {registerDataType, getType} = dataTypes
+const {registerDataType, getType, getTypeInstance} = dataTypes
 
 import {emojiRegex, emailRegexes} from './regexes'
 
@@ -27,7 +27,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 	constructor (config) {
 		super(config)
-
+	
 		const {disallowEmoji} = config || {}
 		if (disallowEmoji!==void 0) {
 			if (typeof disallowEmoji !== 'boolean')
@@ -73,7 +73,36 @@ import {emojiRegex, emailRegexes} from './regexes'
 	}
 }
 
-@registerDataType class DECIMAL extends DataType {
+@registerDataType class DECIMAL extends DataType<{
+	minExclusive?: boolean,
+	min?: ?number,
+	max?: ?number,
+	maxExclusive?: boolean,
+}> {
+	minExclusive: boolean = false
+	min: ?number = null
+	max: ?number = null
+	maxExclusive: boolean = false
+
+	toJSON () {
+		return { ...super.toJSON(),
+			minExclusive: this.minExclusive,
+			min: this.min, max: this.max,
+			maxExclusive: this.maxExclusive,
+		}
+	}
+
+	constructor (config) {
+		super(config)
+
+		const { minExclusive, min, max, maxExclusive } = config || {}
+		if (typeof min=='number') this.min = min
+		if (typeof max=='number') this.max = max
+		if (typeof minExclusive=='boolean') this.minExclusive = minExclusive
+		if (typeof maxExclusive=='boolean') this.maxExclusive = maxExclusive
+
+	}
+
 	static matchesRawType (value, key) {
 		return value===Number || super.matchesRawType(value, key)
 	}
@@ -81,6 +110,18 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const val = super.validate(value, opt)
 		if (val*1!=val)
 			throw new Error(`expected number, but val!=val*1 (${val}!=${val*1})`)
+
+		const { minExclusive, min, max, maxExclusive } = this
+		if (typeof min=='number' && !(minExclusive? min < val: min <= val))
+			throw new Error((minExclusive
+				? `value has to be larger than`
+				: `value has to be at least`)+` ${String(max)}, but got ${val} (too small)`)
+
+		if (typeof max=='number' && !(maxExclusive? val < max: val <= max))
+			throw new Error((maxExclusive
+				? `value has to be less than`
+				: `value has to be at most`)+` ${String(max)}, but got ${val} (too large)`)
+
 		return val
 	}
 }
@@ -205,7 +246,8 @@ import {emojiRegex, emailRegexes} from './regexes'
 	constructor (config) {
 		super(config)
 
-		const {ofInput: innerModule} = config || {}
+		const conf = config || {}
+		const innerModule = conf.innerModule || conf.matchedValue
 		if (!innerModule)
 			throw new Error('ofInput/innerModule is required')
 		if (!innerModule._isModule)
@@ -217,12 +259,13 @@ import {emojiRegex, emailRegexes} from './regexes'
 		// key[0]===key[0].toUpperCase()
 		// value._isModule
 		// new value() instanceof DataModule
+		const okWithModule = ()=> !key || key=='type' || key==value.name
 		let superClass = value
 		while (superClass) {
-			if (superClass === DataModule) return true
+			if (superClass === DataModule) return okWithModule
 			superClass = superClass.prototype
 		}
-		if (value._isModule) return true
+		if (value._isModule) return okWithModule
 		return super.matchesRawType(value, key)
 	}
 
@@ -237,18 +280,30 @@ import {emojiRegex, emailRegexes} from './regexes'
 }
 
 @registerDataType class SELF extends DataType<{
-	Module: DataModuleClassType,
-}, *> {
+	Module?: DataModuleClassType,
+}, {
+	Module?: DataModuleClassType,
+}> {
+	Module: ?DataModuleClassType = null
+
+	constructor (config) {
+		super(config)
+
+		if (config && config.Module)
+			this.Module = config.Module
+	}
+
 	validate (value, opt) {
 		const val = super.validate(value, opt)
-		const {Module} = opt
+		// $FlowFixMe
+		const Module = (opt || {}).Module || this.Module
 
 		if (!Module)
 			throw new Error('opt.Module is required')
 		if (!Module._isModule)
 			throw new Error(`opt.Module has to be a DataModule subclass (got ${Module})`)
 
-		return Module.validate(value, opt)
+		return !val? val: Module.validate(val, opt)
 	}
 }
 
@@ -256,6 +311,18 @@ import {emojiRegex, emailRegexes} from './regexes'
 // 	For validation/doc: OBJECT.of({field:type, ...})
 @registerDataType class OBJECT extends DataType {
 	objectName = undefined // used by some destinations, ie. graphql, needs to be unique
+
+	fields: {[string]: DataType<*>}
+	getFields ({Module}) {
+		const fields = this.ofInput
+		const resFields = {}
+		Object.keys(fields).forEach(fieldName=> {
+			const objectOrRawType = fields[fieldName]
+			const typeInstance = getTypeInstance(objectOrRawType, {Module})
+			resFields[fieldName] = typeInstance
+		})
+		return resFields
+	}
 
 	toJSON () {
 		return { ...super.toJSON(), objectName: this.objectName }
@@ -270,7 +337,11 @@ import {emojiRegex, emailRegexes} from './regexes'
 			throw new Error('ofInput/fields is required')
 		if (typeof fields !== 'object')
 			throw new Error(`ofInput/fields: expected object (got ${typeof fields})`)
-		
+
+		// modulate fields
+		this.fields = this.getFields(config || {})
+
+
 		const {name: objectName} = config || {}
 		if (objectName !== void 0) {
 			if (typeof objectName !== 'string' && typeof objectName !== 'function')
@@ -284,7 +355,8 @@ import {emojiRegex, emailRegexes} from './regexes'
 	}
 
 	validate (value, opt) {
-		const {ofInput: fields} = this
+		// TODO: should opt.Module override config.Module?
+		const {fields} = this // this.getFields(opt)
 		const val = super.validate(value, opt)
 		// $FlowFixMe
 		return validateAgainstFields(fields)(val, opt)

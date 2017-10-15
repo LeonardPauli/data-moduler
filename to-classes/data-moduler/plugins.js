@@ -1,12 +1,12 @@
 // @flow
-import context from './context'
+import context, {type actionContextBaseType} from './context'
 
 const plugins = {}
 export default plugins
 
 class Plugin {
-	static namespace = 'myexample'
-	static targetName = 'MyExample'
+	static namespace = '' // 'myexample'
+	static targetName = '' // 'MyExample'
 
 	static didRegister () { /**/ }
 
@@ -27,7 +27,11 @@ class Plugin {
 		return val
 	}
 
-	static documentation = {
+	static documentation: {
+		oneliner: string,
+		description: string,
+		url?: string,
+	} = {
 		oneliner: 'summary that fits one line',
 		description: 'what it does, how to get started, etc',
 		url: 'http://datamoduler.co',
@@ -51,16 +55,18 @@ class Plugin {
 
 	// Destination
 
-	static getActionContext = null // (context, ...customArgs)=> context
+	static getActionContext: ((actionContextBaseType, ...customArgs: *)=> actionContextBaseType)
+		| null = null // (context, ...customArgs)=> context
 
 	static getActionWrapper ({Module, action, actionName}) {
-		if (!this.getActionContext)
+		const {getActionContext} = this
+		if (!getActionContext)
 			throw new Error(`getActionContext not implemented for plugin ${this.namespace}`)
 
 		const normalised = `$${this.namespace}`
 		return (...customArgs)=> {
 			const ctx = context.get({Module, action, actionName})
-			const ctx2 = this.getActionContext && this.getActionContext(ctx, ...customArgs)
+			const ctx2 = getActionContext(ctx, ...customArgs)
 			return action[normalised](ctx2)
 		}
 	}

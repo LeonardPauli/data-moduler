@@ -1,5 +1,5 @@
 {
-  "name": "data-moduler",
+  "name": "data-moduler-old",
   "version": "1.0.0",
   "description": "Automatic generation of database models, rest endpoints and graphql api (all with validations, ease of authentisation and fully customizable) from simple specification \"module\" files",
   "main": "src/index.js",
@@ -45,9 +45,10 @@
     "onchange": "^3.2.1"
   },
   "jest": {
-    "verbose": true
+    "verbose": false
   },
   "dependencies": {
+    "data-moduler": "file:./to-classes/data-moduler",
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
     "express-graphql": "^0.6.6",

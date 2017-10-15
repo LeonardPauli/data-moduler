@@ -6,10 +6,11 @@ import {type DataModuleClassType} from './DataModule'
 export class Action {
 	static isGetter = false
 
+	name: string // fieldName
 	inputType: DataTypeType<*>
 	returnType: DataTypeType<*>
 	defaultFn: mixed=> *
-	fn: Object=> * // wrapped defaultFn
+	fn: Object=> * // wrapped defaultFn, during modulate
 	data: Object
 
 	constructor (config: Object = {}) {

@@ -1,4 +1,9 @@
-import {plugins, dataTypes, flags, performModuleModification, destinations} from '../index'
+// @flow
+
+import {plugins, dataTypes, flags, performModuleModification, destinations} from '../../../index'
+// const a = require('../../../index')
+// console.log(a)
+
 const {Plugin, registerPlugin} = plugins
 const {registerDestination} = destinations
 const {STRING} = dataTypes
@@ -8,10 +13,10 @@ const {registerFlag} = flags
 // Example of destination types. These can be whatever the destination
 // library provides (ie just object instead of classes or whatever)
 class MyMaybeType {
-	innerType
+	innerType: Function
 	constructor (type) {
 		if (typeof type !== 'function')
-			throw new Error(`MyMaybe requires type as class, got ${typeof value}`)
+			throw new Error(`MyMaybe requires type as class, got ${typeof type}`)
 		this.innerType = type
 	}
 
@@ -77,16 +82,16 @@ export default class MyExamplePlugin extends Plugin {
 			// 	fromType(myType).validate(from(myValue)),
 		})
 
-		/* this allows you to write
-		STRING.$MyExample === MyStringType // true
-		const stringType = new STRING({allowNull: true})
+		// this allows you to write
+		// 	STRING.$MyExample === MyStringType // true
+		// 	const stringType = new STRING({allowNull: true})
+		// 	
+		// 	const myStringType = stringType.asMyExample // => new MyMaybeType(MyStringType)
+		// 	STRING.newFromMyExample(myStringType) // => ~stringType / new STRING({allowNull: true})
+		// 	
+		// 	const myVal = stringType.toMyExample('hello') // => '!hello'
+		// 	const val = stringType.fromMyExample(myVal) // => 'hello'
 		
-		const myStringType = stringType.asMyExample // => new MyMaybeType(MyStringType)
-		STRING.newFromMyExample(myStringType) // => ~stringType / new STRING({allowNull: true})
-
-		const myVal = stringType.toMyExample('hello') // => '!hello'
-		const val = stringType.fromMyExample(myVal) // => 'hello'
-		*/
 	
 
 		// register destinations

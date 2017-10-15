@@ -113,7 +113,7 @@ export type DataTypeType<extraConfigOpt = {}, extraValidationOpt = {}> =
 export const getTypeInstance = (
 	objectOrRawTypeOrType: DataType<*> | Object,
 	{Module}: {Module?: DataModuleClassType} = {}
-)=> {
+): DataType<*>=> {
 
 	// new STRING({...config})
 	if (objectOrRawTypeOrType instanceof DataType)
@@ -141,11 +141,16 @@ export const getTypeInstance = (
 	const config = {}
 	const Type = Object.keys(objectOrRawType).reduce((p, k)=> {
 		const val = objectOrRawType[k]
-		const ret = p || dataTypes.findMatchingType(val, k)
-		if (p) config[k] = val
+		let ret = p
+		if (!ret) {
+			ret = dataTypes.findMatchingType(val, k)
+			if (ret) config.matchedValue = val
+		}
+		config[k] = val
 		return ret
 	}, null)
 	if (!Type) throw new Error(`no matching data type found for ${String(objectOrRawType)}`)
+
 	return new Type({...config, Module})
 }
 

@@ -10,7 +10,7 @@ export default destinations
 interface destinationInterface {
 	namespace: string,
 	name: string,
-	getActionContext: (context: Object, ...customArgs: *)=> Object,
+	getActionContext: null | (context: Object, ...customArgs: *)=> Object,
 }
 
 const registerDestination = (destination: destinationInterface)=> {

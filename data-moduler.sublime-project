@@ -30,7 +30,7 @@
 	"syntax_override": {
 		"\\.js$": ["JSX", "JSX"]
 	},
-	"SublimeLinter": {
+	"_SublimeLinter": {
 		"chdir": "${project}",
 		"linters": {
 			"eslint": {

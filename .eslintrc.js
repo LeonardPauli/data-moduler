@@ -1,6 +1,8 @@
 // https://eslint.org/docs/rules/
 // eslint-disable-next-line no-process-env
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process && process.env
+// eslint-disable-next-line no-process-env
+	&& process.env.NODE_ENV === 'production'
 
 module.exports = {
 	env: {
@@ -214,7 +216,7 @@ module.exports = {
 		'no-floating-decimal': 'error',
 		'no-implicit-globals': 'error',
 		'no-implied-eval': 'error',
-		'no-inline-comments': 'off', // warn, except for ()=> { /**/ } and short ones
+		'no-inline-comments': 'off', // warn, except for ()=> { /__/ } and short ones
 		'no-invalid-this': 'warn',
 		'no-iterator': 'error',
 		'no-label-var': 'error',
