@@ -1,7 +1,7 @@
 // @flow
 
-import {context, DataModule, modulate} from '../data-moduler'
-import {Action} from '../data-moduler/actions'
+import {context, DataModule, modulate} from '../lib'
+import {Action} from '../lib/actions'
 
 describe('context', ()=> {
 	it('exists', ()=> expect(typeof context).toBe('object'))

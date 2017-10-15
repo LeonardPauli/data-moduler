@@ -1,8 +1,8 @@
 // @flow
 
-import {plugins, dataTypes, flags, performModuleModification, destinations} from '../../../index'
-// const a = require('../../../index')
-// console.log(a)
+import {modulate, plugins, dataTypes, flags, performModuleModification, destinations} from 'data-moduler'
+require('data-moduler/defaults/flags')
+require('data-moduler/defaults/dataTypes')
 
 const {Plugin, registerPlugin} = plugins
 const {registerDestination} = destinations
@@ -128,6 +128,7 @@ export default class MyExamplePlugin extends Plugin {
 				},
 			},
 		})
+		
 
 		// add module modifications requiring other modules as dependencies
 		// 	in order for them to initialise first
@@ -144,10 +145,12 @@ export default class MyExamplePlugin extends Plugin {
 				})
 			},
 		}]
+		// TODO: move modulate call to be automatic inside moduleModif..(?)
+
 	}
 
 	static documentation = {
-		title: 'A great startingpoint for any new plugin for data-moduler',
+		oneliner: 'A great startingpoint for any new plugin for data-moduler',
 		description: 'It has it all, just get your copy, modify it, push it, include it, and profit!',
 		url: 'https://datamoduler.co/plugins/create',
 	}

@@ -1,6 +1,6 @@
 // @flow
 
-import {destinations, plugins} from '../data-moduler'
+import {destinations, plugins} from '../lib'
 
 describe('destinations', ()=> {
 	it('is initialized', ()=> expect(typeof destinations).toBe('object'))
@@ -36,7 +36,7 @@ describe('destinations', ()=> {
 		it('throws on overwrite', ()=> {
 			class MyDestination extends plugins.Plugin {
 				static namespace = 'myDestination'
-				static getActionContext = (context, ...customArgs)=> context
+				static getActionContext = (context, ..._customArgs)=> context
 			}
 			expect(()=> registerDestination(MyDestination)).toThrow('already registered')
 		})

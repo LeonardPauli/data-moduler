@@ -1,5 +1,5 @@
 // @flow
-import flags from '../flags'
+import flags from '../lib/flags'
 const {registerFlag} = flags
 
 const toRegister = {

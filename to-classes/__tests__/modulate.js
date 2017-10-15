@@ -1,7 +1,8 @@
 // @no-flow
 // TODO: add flow plugin that generates lib defs from DataModule
 
-import {DataModule, dataTypes, modulate} from 'data-moduler'
+import {DataModule, dataTypes, modulate} from '../lib'
+require('../defaults/dataTypes')
 
 describe('modulate', ()=> {
 	it('exists', ()=> expect(typeof modulate).toBe('function'))

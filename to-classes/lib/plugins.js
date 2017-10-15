@@ -13,12 +13,12 @@ class Plugin {
 	static apply (module, _opt) {
 		const {namespace} = this
 		const key = `$${namespace}`
-		const val = module[key]
 		
-		module[key]
-			= val === false ? {enabled: false} :
-				val === void 0 ? {enabled: true} :
-					val
+		
+		const val = module[key]
+			= module[key] === false ? {enabled: false} :
+				module[key] === void 0 ? {enabled: true} :
+					module[key]
 
 		if (typeof module[key] !== 'object')
 			throw new Error(`${module.name}.${key} should be `

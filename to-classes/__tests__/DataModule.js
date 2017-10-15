@@ -1,6 +1,6 @@
 // @flow
 
-import {DataModule} from 'data-moduler'
+import {DataModule} from '../lib'
 
 describe('DataModule', ()=> {
 	it('exists', ()=> expect(typeof DataModule).toBe('function'))

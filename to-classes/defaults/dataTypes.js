@@ -1,8 +1,8 @@
 /* eslint no-unused-vars: 0 */
 // @flow
 
-import DataModule, {validateAgainstFields, type DataModuleClassType} from '../DataModule'
-import dataTypes, {DataType} from '../dataTypes'
+import DataModule, {validateAgainstFields, type DataModuleClassType} from '../lib/DataModule'
+import dataTypes, {DataType} from '../lib/dataTypes'
 const {registerDataType, getType, getTypeInstance} = dataTypes
 
 import {emojiRegex, emailRegexes} from './regexes'

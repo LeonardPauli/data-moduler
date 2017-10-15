@@ -1,6 +1,7 @@
 // @flow
 
-import {flags} from '../data-moduler'
+import {flags} from '../lib'
+require('../defaults/flags')
 
 describe('flags', ()=> {
 	it('is initialized', ()=> expect(flags.allowNull).toBe(true))

@@ -1,6 +1,6 @@
 // @flow
 
-import {plugins} from '../data-moduler'
+import {plugins} from '../lib'
 const {Plugin, registerPlugin} = plugins
 
 describe('plugins', ()=> {

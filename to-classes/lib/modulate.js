@@ -4,7 +4,9 @@ import {performModuleModifications} from './moduleModifications'
 import {DataType, getTypeInstance} from './dataTypes'
 import {getActionInstance, Action} from './actions'
 import plugins from './plugins'
-import context from './context'
+
+
+export const suppressedWarnings = {pluginOrder: true}
 
 // normalises fields
 // text: String, -> text: new STRING(config),
@@ -34,14 +36,7 @@ export const modulateActions = ({Module, fields, isGetter = false}: {
 	Object.keys(fields).forEach(actionName=> {
 		const objectOrAction = fields[actionName]
 		const action = getActionInstance(objectOrAction, {Module, isGetter})
-
-		action.name = actionName
-		action.fn = (value: mixed, baseCtx)=> {
-			const ctx = context.get({Module, action}, baseCtx)
-			const input = action.inputType.validate(value, {Module})
-			return action.defaultFn({...baseCtx, ...ctx, input})
-		}
-
+		action.update({actionName, Module})
 		resFields[actionName] = action
 	})
 	return resFields
@@ -49,7 +44,9 @@ export const modulateActions = ({Module, fields, isGetter = false}: {
 
 // normalises fields and actions/getters
 // + executes moduleModifications matching self's submodule tree
-const modulate = (Module: DataModuleClassType)=> {
+const modulate = (Module: DataModuleClassType, {
+	skipPlugins = false,
+}: {skipPlugins?: boolean} = {})=> {
 	Module.fields = modulateFields({Module, fields: Module.fields})
 	Module.actions = modulateActions({Module, fields: Module.actions})
 	Module.getters = modulateActions({Module, fields: Module.getters, isGetter: true})
@@ -57,8 +54,9 @@ const modulate = (Module: DataModuleClassType)=> {
 	Module.moduleModifications = performModuleModifications(
 		Module.moduleModifications, [Module, ...Module.allSubmodules()])
 
+	if (skipPlugins) return
 	// TODO: apply plugins?
-	if (!wipWarningLogged) {
+	if (!wipWarningLogged && !suppressedWarnings.pluginOrder) {
 		console.warn('wip: will apply all available plugins in registration order')
 		wipWarningLogged = true
 	}

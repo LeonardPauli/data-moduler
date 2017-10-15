@@ -1,6 +1,6 @@
 // @flow
 
-import {ValidationError} from '../data-moduler'
+import ValidationError from '../lib/ValidationError'
 
 describe('ValidationError', ()=> {
 	it('exists', ()=> expect(typeof ValidationError).toBe('function'))

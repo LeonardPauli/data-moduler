@@ -1,6 +1,7 @@
 // @flow
 
-import {dataTypes, DataModule, modulate} from '../data-moduler'
+import {dataTypes, DataModule, modulate} from '../lib'
+require('../defaults/dataTypes')
 
 describe('default dataTypes', ()=> {
 	it('ANY', ()=> { expect(dataTypes.ANY).not.toBe(undefined) })

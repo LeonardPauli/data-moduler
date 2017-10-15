@@ -1,6 +1,7 @@
 // @flow
 import {getTypeInstance, type DataTypeType} from './dataTypes'
 import {type DataModuleClassType} from './DataModule'
+import context from './context'
 
 
 export class Action {
@@ -13,8 +14,10 @@ export class Action {
 	fn: Object=> * // wrapped defaultFn, during modulate
 	data: Object
 
-	constructor (config: Object = {}) {
-		const {fn, input, returns, Module, ...data} = config
+	constructor (config: Object = {}) { this.update(config) }
+	update (config: Object = {}) {
+		const {fn, input, returns, Module, actionName, ...data}
+			= Object.assign(this.toJSON(), config)
 		// const self = (...args)=> self.fn.bind(self)(...args)
 		// self.constructor = this.constructor
 		// Object.freeze(this)
@@ -32,6 +35,18 @@ export class Action {
 
 		if (returns!==void 0)
 			this.returnType = getTypeInstance(returns, {Module})
+
+		if (actionName!==void 0)
+			this.name = actionName
+
+		if (Module!==void 0)
+			this.fn = (value: mixed, baseCtx)=> {
+				// $FlowFixMe
+				const ctx = context.get({Module, action: this}, baseCtx)
+				console.log(value)
+				const input = this.inputType.validate(value, {Module})
+				return this.defaultFn({...baseCtx, ...ctx, input})
+			}
 	}
 
 	get function (): (*)=> * {

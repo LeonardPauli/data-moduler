@@ -1,6 +1,6 @@
 // @flow
 
-// import {DataModule} from '../data-moduler'
+// import DataModule from '../lib/DataModule'
 
 describe('moduleModifications', ()=> {
 	// it('exists', ()=> expect(typeof ValidationError).toBe('function'))

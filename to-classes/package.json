@@ -1,4 +1,4 @@
 {
   "name": "data-moduler",
-  "main": "./data-moduler/index.js"
+  "main": "./index.js"
 }

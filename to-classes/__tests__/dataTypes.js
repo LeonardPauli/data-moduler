@@ -1,7 +1,9 @@
 // @flow
 /* eslint-disable max-nested-callbacks */
 
-import {dataTypes} from '../data-moduler'
+import {dataTypes} from '../lib'
+require('../defaults/dataTypes')
+
 describe('dataTypes', ()=> {
 	const {DataType} = dataTypes
 	describe('DataType', ()=> {
