@@ -3,6 +3,7 @@
 
 import DataModule, {validateAgainstFields, type DataModuleClassType} from '../lib/DataModule'
 import dataTypes, {DataType} from '../lib/dataTypes'
+import ValidationError from '../lib/ValidationError'
 const {registerDataType, getType, getTypeInstance} = dataTypes
 
 import {emojiRegex, emailRegexes} from './regexes'
@@ -31,14 +32,14 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {disallowEmoji} = config || {}
 		if (disallowEmoji!==void 0) {
 			if (typeof disallowEmoji !== 'boolean')
-				throw new Error(`disallowEmoji: expected boolean, got ${typeof disallowEmoji}`)
+				throw new ValidationError(`disallowEmoji: expected boolean, got ${typeof disallowEmoji}`)
 			this.disallowEmoji = disallowEmoji
 		}
 
 		const {regex} = config || {}
 		if (regex!==void 0) {
 			if (!(regex instanceof RegExp))
-				throw new Error(`regex: expected instanceof RegExp (got ${regex})`)
+				throw new ValidationError(`regex: expected instanceof RegExp (got ${regex})`)
 			this.regex = regex
 		}
 	}
@@ -49,11 +50,11 @@ import {emojiRegex, emailRegexes} from './regexes'
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		if (typeof val!=='string')
-			throw new Error(`expected string, but typeof val==='${typeof val}'`)
+			throw new ValidationError(`expected string, but typeof val==='${typeof val}'`)
 		if (this.disallowEmoji && this.constructor.emojiRegex.test(val))
-			throw new Error(`disallowEmoji=${this.disallowEmoji}, but string contained emoji`)
+			throw new ValidationError(`disallowEmoji=${this.disallowEmoji}, but string contained emoji`)
 		if (this.regex && !this.regex.test(val))
-			throw new Error('value failed regex validation')
+			throw new ValidationError('value failed regex validation')
 		return val
 	}
 }
@@ -69,7 +70,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		if (!!val==val) return val
-		throw new Error(`expected boolean, but val!=!!val (val=${val})`)
+		throw new ValidationError(`expected boolean, but val!=!!val (val=${val})`)
 	}
 }
 
@@ -109,16 +110,16 @@ import {emojiRegex, emailRegexes} from './regexes'
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		if (val*1!=val)
-			throw new Error(`expected number, but val!=val*1 (${val}!=${val*1})`)
+			throw new ValidationError(`expected number, but val!=val*1 (${val}!=${val*1})`)
 
 		const { minExclusive, min, max, maxExclusive } = this
 		if (typeof min=='number' && !(minExclusive? min < val: min <= val))
-			throw new Error((minExclusive
+			throw new ValidationError((minExclusive
 				? `value has to be larger than`
 				: `value has to be at least`)+` ${String(max)}, but got ${val} (too small)`)
 
 		if (typeof max=='number' && !(maxExclusive? val < max: val <= max))
-			throw new Error((maxExclusive
+			throw new ValidationError((maxExclusive
 				? `value has to be less than`
 				: `value has to be at most`)+` ${String(max)}, but got ${val} (too large)`)
 
@@ -134,7 +135,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		if (Math.floor(val)==val) return val
-		throw new Error(`expected integer, but val!=Math.floor(val) (${val}!=${Math.floor(val)})`)
+		throw new ValidationError(`expected integer, but val!=Math.floor(val) (${val}!=${Math.floor(val)})`)
 	}
 }
 
@@ -152,7 +153,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {ofInput: rawInnerType} = config || {}
 		if (rawInnerType) {
 			const innerType = getType(rawInnerType)
-			if (!innerType) throw new Error('no matching type '
+			if (!innerType) throw new ValidationError('no matching type '
 				+`found for ofInput/rawInnerType (${rawInnerType})`)
 			this.innerType = innerType
 		}
@@ -184,7 +185,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {ofInput} = config || {}
 		if (ofInput) {
 			if (!(ofInput instanceof Array))
-				throw new Error('ofInput should be array of primitive '
+				throw new ValidationError('ofInput should be array of primitive '
 					+`values that are allowed, was '${ofInput}'`)
 			this.values = [...ofInput]
 		}
@@ -206,7 +207,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const returnIndex = (opt && opt.returnIndex===true) || false
 		const {values} = this
 		const idx = values.indexOf(val)
-		if (idx==-1) throw new Error(`'${val}' not in enum allowed values (${String(values)})`)
+		if (idx==-1) throw new ValidationError(`'${val}' not in enum allowed values (${String(values)})`)
 		return returnIndex? idx: val
 	}
 }
@@ -223,11 +224,11 @@ import {emojiRegex, emailRegexes} from './regexes'
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		if (typeof val!=='number' && typeof val!=='string' && !(val instanceof Date))
-			throw new Error(`expected number/string/Date, but got typeof val==='${typeof val}'`)
+			throw new ValidationError(`expected number/string/Date, but got typeof val==='${typeof val}'`)
 
 		const dateVal = new Date(val)
 		if (isNaN(dateVal.getTime()))
-			throw new Error('date is invalid')
+			throw new ValidationError('date is invalid')
 
 		return dateVal
 	}
@@ -249,9 +250,9 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const conf = config || {}
 		const innerModule = conf.innerModule || conf.matchedValue
 		if (!innerModule)
-			throw new Error('ofInput/innerModule is required')
+			throw new ValidationError('ofInput/innerModule is required')
 		if (!innerModule._isModule)
-			throw new Error(`ofInput/innerModule has to be a DataModule subclass (got ${innerModule})`)
+			throw new ValidationError(`ofInput/innerModule has to be a DataModule subclass (got ${innerModule})`)
 		this.innerModule = innerModule
 	}
 
@@ -272,7 +273,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 	validate (value, opt) {
 		const val = super.validate(value, opt)
 		// if (!(value instanceof this.innerModule))
-		// 	throw new Error(`expected value to be instance of ${this.innerModule.name}, `
+		// 	throw new ValidationError(`expected value to be instance of ${this.innerModule.name}, `
 		// 		+`but got (${typeof value}, ${value && value.constructor && value.constructor.name})`)
 
 		return this.innerModule.validate(value, opt)
@@ -299,9 +300,9 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const Module = (opt || {}).Module || this.Module
 
 		if (!Module)
-			throw new Error('opt.Module is required')
+			throw new ValidationError('opt.Module is required')
 		if (!Module._isModule)
-			throw new Error(`opt.Module has to be a DataModule subclass (got ${Module})`)
+			throw new ValidationError(`opt.Module has to be a DataModule subclass (got ${Module})`)
 
 		return !val? val: Module.validate(val, opt)
 	}
@@ -334,9 +335,9 @@ import {emojiRegex, emailRegexes} from './regexes'
 
 		const {ofInput: fields} = config || {}
 		if (!fields)
-			throw new Error('ofInput/fields is required')
+			throw new ValidationError('ofInput/fields is required')
 		if (typeof fields !== 'object')
-			throw new Error(`ofInput/fields: expected object (got ${typeof fields})`)
+			throw new ValidationError(`ofInput/fields: expected object (got ${typeof fields})`)
 
 		// modulate fields
 		this.fields = this.getFields(config || {})
@@ -345,7 +346,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {name: objectName} = config || {}
 		if (objectName !== void 0) {
 			if (typeof objectName !== 'string' && typeof objectName !== 'function')
-				throw new Error(`ofInput/name: expected string (or ()=> string) (got ${typeof objectName})`)
+				throw new ValidationError(`ofInput/name: expected string (or ()=> string) (got ${typeof objectName})`)
 			this.objectName = objectName
 		}
 	}
@@ -376,7 +377,7 @@ import {emojiRegex, emailRegexes} from './regexes'
 		const {strictCheck} = config || {}
 		if (strictCheck!==void 0) {
 			if (typeof strictCheck !== 'boolean')
-				throw new Error(`strictCheck: expected boolean, got ${typeof strictCheck}`)
+				throw new ValidationError(`strictCheck: expected boolean, got ${typeof strictCheck}`)
 			const {simple, unicodeSupport, strict} = emailRegexes
 			this.regex = !this.strictCheck? simple: this.allowEmoji? unicodeSupport: strict
 		}

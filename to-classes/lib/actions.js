@@ -22,7 +22,12 @@ export class Action {
 		// self.constructor = this.constructor
 		// Object.freeze(this)
 
+		// TODO: use a similar "update system" for fields / DataType
 		this.data = data
+		Object.keys(data).forEach(key=> {
+			// $FlowFixMe
+			this[key] = data[key]
+		})
 		
 		if (fn!==void 0) {
 			if (typeof fn!=='function')
@@ -43,7 +48,6 @@ export class Action {
 			this.fn = (value: mixed, baseCtx)=> {
 				// $FlowFixMe
 				const ctx = context.get({Module, action: this}, baseCtx)
-				console.log(value)
 				const input = this.inputType.validate(value, {Module})
 				return this.defaultFn({...baseCtx, ...ctx, input})
 			}

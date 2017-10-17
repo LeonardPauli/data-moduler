@@ -48,8 +48,8 @@
     "verbose": false
   },
   "dependencies": {
-    "data-moduler": "file:./to-classes/data-moduler",
     "body-parser": "^1.17.2",
+    "data-moduler": "file:./to-classes",
     "express": "^4.15.3",
     "express-graphql": "^0.6.6",
     "faker": "^4.1.0",

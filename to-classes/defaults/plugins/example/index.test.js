@@ -1,10 +1,12 @@
 // @flow
 
-import {plugins, DataModule, modulate} from 'data-moduler/lib'
-require('./index')
-const {Plugin} = plugins
+// import {plugins, DataModule, modulate} from 'data-moduler/lib'
+// require('./index')
+// const {Plugin} = plugins
 
-describe('ExamplePlugin', ()=> {
+describe.skip('ExamplePlugin', ()=> {
+	it('todo')
+/*
 	const {myexample} = plugins
 	it('exists', ()=> expect(Plugin.isPrototypeOf(myexample)).toBe(true))
 
@@ -32,4 +34,5 @@ describe('ExamplePlugin', ()=> {
 		myexample.fix()(MyModule)
 		console.log(MyModule.getters.sayHello.fn('lala'))
 	})
+*/
 })
