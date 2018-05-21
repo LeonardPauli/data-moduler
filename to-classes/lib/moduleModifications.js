@@ -31,6 +31,7 @@ export const performModuleModification = (
 	Module: DataModuleClassType,
 	modificationObject: modificationObjectType,
 	merger: mergerFnType<*> = defaultMerger,
+	// should take in available modules as well? + how to check plugins?
 )=> {
 	const merge = opt=> merger({Module, oldValue: opt.parent[opt.key], defaultMerger, ...opt})
 

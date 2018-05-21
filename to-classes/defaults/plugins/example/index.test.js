@@ -6,6 +6,7 @@
 
 describe.skip('ExamplePlugin', ()=> {
 	it('todo')
+
 /*
 	const {myexample} = plugins
 	it('exists', ()=> expect(Plugin.isPrototypeOf(myexample)).toBe(true))
