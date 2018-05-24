@@ -1,7 +1,7 @@
 {
-	"name": "lp-node-module-base",
-	"version": "0.1.0",
-	"description": "",
+	"name": "data-moduler",
+	"version": "0.3.0",
+	"description": "Unified data model graph declaration -> any destination (like db, api, UI date store, docs, etc)",
 	"main": "index.js",
 	"scripts": {
 		"test:coverage": "jest --coverage",
@@ -12,8 +12,8 @@
 		"build:watch": "npm run build -- --watch",
 		"build": "f () { ([ -d lib ] && rm -rf lib); babel src -d lib --copy-files --include-dotfiles --source-maps ${1:---retain-lines --minified}; }; f"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": ["data", "structure", "model", "declarative", "generate", "store", "graph"],
+	"author": "Leonard Pauli <leonardpauli@me.com> (https://leonardpauli.me)",
 	"private": true,
 	"license": "AGPL-3.0-or-later",
 	"files": [

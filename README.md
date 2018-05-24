@@ -1,14 +1,17 @@
-# {{=${project_title:-Project Title} }}
-*{{=${description_shorter:-description} }}*
+# data-moduler
+*Unified data model graph declaration -> any destination (like db, api, UI date store, docs, etc)*
 
-{{="$'\n'$'\n'"${example_text:-_bold_ *italic* [link](https://example.com) \`code\`} }}
- 
+
+**see `/examples` and `/module/__tests__` for usage**
+
+**see [lpdocs](https://github.com/LeonardPauli/docs/tree/master/app/data/moduler) for home location/context**
+
 
 ### Contribute
 
 Feel free to fork and send PR's :)
 
-Copyright © {{=${copyright_holder:-Leonard Pauli} }}, {{=${copyright_year:-2018} }}
+Copyright © Leonard Pauli, 2018
 
-Licence: {{=${licence_short:-GNU Affero General Public License v3.0 or later}.}}
-{{="$'\n'"${licence_note:-For commersial / closed-source / custom licencing needs, please contact us.} }}
+Licence: GNU Affero General Public License v3.0 or later.
+For commersial / closed-source / custom licencing needs, please contact us.
