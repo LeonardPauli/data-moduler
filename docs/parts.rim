@@ -1,0 +1,85 @@
+# parts
+' LeonardPauli/data-moduler
+	Created by Leonard Pauli, 21 may 2018
+
+
+- MVP data structure
+	incl. // see DataModuler
+		// types are denoted with __isType: true?
+		// import {types} from rimdata; const {computed: cp, action: ac, model} = types
+		- late
+		- nested object
+		- nested model
+		- primitive (bool, number, string, date)
+		' - union? // not important for now? allow subset models?
+			post, audio post, poll post, ...;
+			- Post{audio: ?AudioPostData, poll...} // nah?
+			- AudioPost is Post: ...AudioPostData // meh..
+			- Post{features: [{type: 'audio', data: {...}}]} // hmm...
+			- ...?
+		- enum
+		- many
+		- custom (eg. file -> auto add g/setter fn + use to/from JSON under the hood)
+		- default values
+		- validation + custom
+			// typechecking during dev, optional validation api available in dev + prod
+		- to/from JSON (return array with obj (first is the main one) + repl. circular refs with {__ref: (idx in array)}) (used for gunjs sync?)
+		- functions
+			use ctx obj as only arg
+				- me
+				- line of parents during setup
+				- (not parent when data because multi-parent)
+				- custom (like vue props, etc)
+			- computed // pure
+			- actions // non-pure, could also be "getters", though value not cached
+		- tmp state // not persistent, use eg. for timer ids etc
+		- hooks
+			- $beforeCreate // possibly prepare state
+			- $beforeDestroy // clean up state
+		- meta data
+			- $name
+			- $extends
+			- inits?
+
+- data structure pre-processing:
+	- resolve dot keys recursive?
+	- String instead of type.string, etc?
+	- use of babel, pipes etc?
+	- see lodash functional?
+
+- data structure to mobx
+	- actions, computed, observable fields (inc pre-create nested/array structures if necessary?)
+	- reactions for dev validation etc, setters for custom save conversion?
+	- make sure reaction dispose is working properly
+
+- Vue mobx manual integration example
+	- reactive data, mobx -> vue
+		- top level
+		- nested
+		- array
+	- actions, vue -> mobx
+	- access props in mobx action/computed? // make vue props sync to mobx? (later like under model state?)
+	- pass through props
+		- top level primitive
+		- nested model
+			- only reference, use fn wrapper if necessary?
+	- simple helper for vue.install
+
+- helper for vue.install for data structure + mobx
+	- example component usage
+		- a model with computed / getters of parent becomes like a "view", all and only the necessary data for the view
+		- use in .vue file, all data logic will have been moved from it; .methods/.computed/.data is only for interaction abstraction handling
+
+- mobx + gunjs sync
+	- sync local top level
+	- sync nested
+	- check ack + allow UI to handle it somehow? computed based on observable callback info put in state?
+
+- gunjs extension to data structure
+	- use with example component and test between browsers
+
+- bundle up as npm module
+- use in lp-vue-lib
+- convert lp-vue-lib components to use it
+- move theme styling to it (accessible from computed getter fn ctx?)
+- commit

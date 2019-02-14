@@ -7,12 +7,17 @@ Self is ./base-setup
 		see ./base-setup.instantiate
 
 	setup:
-		see ./base-setup.instantiate
+		- do ./base-setup.instantiate
 			name="data-moduler"
 			project_title="data-moduler"
 			description_shorter="Unified data model graph declaration -> any destination (like db, api, UI date store, docs, etc)"
 			author_line="Leonard Pauli <leonardpauli@me.com> (https://leonardpauli.me)"
 			copyright_holder="Leonard Pauli"
+		- take in previous
+			- package-json-set-val version "0.3.0"
+			- git pull ~/projects/open-source/web/data-moduler using-classes:using-classes
+			- git push --tags
+			- git push origin using-classes:using-classes // ?
 
 ' TODO:
 	...

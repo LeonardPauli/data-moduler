@@ -1,0 +1,78 @@
+# todo
+' LeonardPauli/data-moduler
+	Created by Leonard Pauli, 27 may 2018
+
+
+data-moduler // based on lp-js-module-base
+	// - init
+		// - follow lp-js-module-base/docs/setup.instantiate to files/data-moduler
+		// - vi README.md
+		// - add "AGPL-3.0-or-later" licence file
+			// - to $lpdocs/admin/licence/texts/
+			// - to $project/
+		' - vi package.json
+			"name": "data-moduler",
+			"version": "0.3.0",
+			"author": "Leonard Pauli <leonardpauli@me.com> (https://leonardpauli.me)",
+			"licence": "AGPL-3.0-or-later",
+	// - git pull ~/projects/open-source/web/data-moduler using-classes:using-classes
+	// - git push --tags
+	// - git push origin using-classes:using-classes // ?
+	// - move to $lpdocs/app/data/moduler
+	- examples with npm link
+	- create tests
+		- simple
+			// type.register(types.extend(types.string, {$name: 'email', validator: ()=> }))
+			// type.register = type=> {const err = validate(type); if (err) throw err; return types[type.$name] = type}
+			// plugins.register = plugin=> {const err = validate(type); if (err) throw err; return plugins[plugin.$name] = plugin}
+			const User = module({
+				$name: 'User',
+				name: type.string,
+				age: type.extend(type.number, {allowNull: true}),
+				$beforeCreate: ({Self})=> console.log(`will create new ${Self.$name}`),
+				$beforeDestroy: ({Self, me})=> console.log(`will destroy an ${Self.$name}{name: ${me.name}}`),
+			})
+			const App = module({
+				$name: 'App',
+				User, users: types.extend(types.many, {of: User, default: []})
+			})
+
+			plugins.register({
+				$name: 'mobx',
+				...
+			})
+
+			const AppData = modulate(plugins.mobx, {})(App)
+			const appData = AppData.$create({}).$plugins.mobx
+			const user = appData.User.$create({name: 'Anna'})
+			reaction(()=> user.name, ()=> console.log(user.name), {fireImmediately: true, delay: 10})
+			setTimeout(()=> user.name = 'Erik', 100)
+
+			// during dev, do validation in reaction and throw if wrong, or look into changing mobx setters?
+			$afterCreate: ({Self, me})=> {
+				isDev && Object.keys(Self).filter(k=> k[0]!='$').map(k=> {
+					reaction(()=> me[k], ()=> Self[k].$validate({val: me[k]}), {fireImmediately: true, delay: 0})
+				})
+			}
+
+			// then, gundb plugin to sync to db in reaction + put ack info in other prop
+			// then, actions + computed, + list?
+			// that's about it for MVP for now
+
+	- implement module MVP
+	- implement types MVP
+	- implement plugins MVP // optionalPeerDependencies?
+	- implement modulate MVP
+	- implement hooks MVP
+	- implement computed + actions MVP
+	- implement state fields MVP // data not synced to db + not observable by default
+	- npm publish
+	- create MVP example that takes stdin input and makes stdout output, only mobx plugin // + using npm link
+	- create MVP example based on prev that also uses gundb plugin + test with multiple instances
+	- create MVP example with vue to create vue-mobx-data-moduler integration plugin // pure html + js, no webpack etc, npm i @vue/vue? + nodemon?
+		- use `export default { $module: {..., age: 3, title: ({me, props})=> props.phrase + me.age } }`, then `<template> text {{me.title}} ...`
+			// does modulate(plugins.vue, {component: this})(modulate(plugins.mobx, {})(module({...this.$module, $name: this.$name?})))
+			// plugins.vue: { ..., $modulate: ({config})=> model=> ..., $modifyCtx: ({config})=> ctx=> Object.assign(ctx, {props: mobx(config.component.$props)}) }
+		- access props in computed
+	// - (postpone fixing auth, etc, saving data and reactively updating UI + declarative data structure base is what's important for now)
+
